@@ -9,7 +9,9 @@ import {
 import { connect, onStatus } from './ros.js';
 import { onMotionCommand } from './publishers/motion.js';
 import { onGimbalChange, setGimbalX, setGimbalY, recenterGimbal } from './publishers/gimbal.js';
-import { onArmChange, setArmJoint, armHome } from './publishers/arm.js';
+import {
+  onArmChange, setArmJoint, armHome, armReady, cancelArmSequence,
+} from './publishers/arm.js';
 import { initKeyboard, onEStop } from './keyboard.js';
 import { initTelemetry, onTelemetry } from './telemetry.js';
 import { initVideo, setVideoUrl } from './video.js';
@@ -237,6 +239,10 @@ function initArmPanel() {
     armHome();
     e.target.blur(); // keep focus free for driving keys
   });
+  $('arm-ready-btn').addEventListener('click', (e) => {
+    armReady();
+    e.target.blur();
+  });
   onTelemetry('arm', ({ ok, raw }) => {
     // Verified shape: {RobotArm: {joint: [{id, run_time, angle}]}}.
     const joints = raw?.RobotArm?.joint;
@@ -322,6 +328,7 @@ function initEStopBanner() {
   const banner = $('estop-banner');
   let timer = null;
   onEStop(() => {
+    cancelArmSequence(); // a staged arm move must never fire after an e-stop
     banner.classList.remove('hidden');
     clearTimeout(timer);
     timer = setTimeout(() => banner.classList.add('hidden'), 1500);

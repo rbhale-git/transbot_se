@@ -106,6 +106,16 @@ export const ARM = {
   },
   stepDeg: 4,
   runTimeMs: 800, // moderate move time so joints never slam (brief requirement)
+
+  // READY pose (operator-specified): staged so the arm clears itself —
+  // the lead joint moves first, followers start once it has progressed
+  // followAfterDeg (estimated from runTimeMs; the driver doesn't stream
+  // joint progress fast enough to track it live).
+  readyPose: {
+    angles: { j7: 115, j8: 175, j9: 30 },
+    leadJoint: 'j7',
+    followAfterDeg: 20,
+  },
 };
 
 // ---- Power -----------------------------------------------------------------

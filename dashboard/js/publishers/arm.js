@@ -65,6 +65,7 @@ export function setArmJoint(jointKey, angleDeg) {
 
 /** Send all joints to the configured safe neutral pose. */
 export function armHome() {
+  cancelArmSequence(); // a pending staged move must not fire after homing
   const moves = [];
   for (const [key, j] of Object.entries(ARM.joints)) {
     state[key] = j.home;
@@ -72,4 +73,39 @@ export function armHome() {
   }
   publishJoints(moves);
   notify();
+}
+
+// ---- Staged READY pose -----------------------------------------------------
+
+let seqTimer = null;
+
+/** Abort a pending staged move (called on e-stop and before new sequences). */
+export function cancelArmSequence() {
+  clearTimeout(seqTimer);
+  seqTimer = null;
+}
+
+/**
+ * Drive to the READY pose in two stages: the lead joint moves first, and the
+ * remaining joints start once it has progressed `followAfterDeg` — estimated
+ * from runTimeMs, since the driver interpolates each move over run_time.
+ */
+export function armReady() {
+  cancelArmSequence();
+  const { angles, leadJoint, followAfterDeg } = ARM.readyPose;
+
+  const startDeg = state[leadJoint];
+  setArmJoint(leadJoint, angles[leadJoint]);
+  const delta = Math.abs(state[leadJoint] - startDeg); // post-clamp travel
+
+  // Time for the lead joint to cover followAfterDeg of its travel.
+  const fraction = delta > 0 ? Math.min(1, followAfterDeg / delta) : 0;
+  const delayMs = Math.round(ARM.runTimeMs * fraction);
+
+  seqTimer = setTimeout(() => {
+    seqTimer = null;
+    for (const key of Object.keys(angles)) {
+      if (key !== leadJoint) setArmJoint(key, angles[key]);
+    }
+  }, delayMs);
 }

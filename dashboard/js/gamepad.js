@@ -15,7 +15,7 @@
 // touches topics directly.
 // ============================================================================
 
-import { MOTION, GAMEPAD } from './config.js';
+import { MOTION, GAMEPAD, GIMBAL, stepSign } from './config.js';
 import { publishMotion, stopMotion } from './publishers/motion.js';
 import { setGimbalX, setGimbalY, onGimbalChange } from './publishers/gimbal.js';
 import { setArmJoint, armHome, onArmChange } from './publishers/arm.js';
@@ -75,8 +75,8 @@ function pollPad() {
   // --- Gimbal: right stick (axes 2/3) rate control ---
   const rx = dz(pad.axes[2] ?? 0);
   const ry = dz(pad.axes[3] ?? 0);
-  if (rx !== 0) setGimbalX(mirror.gx + rx * GAMEPAD.gimbalRateDegS * dt);
-  if (ry !== 0) setGimbalY(mirror.gy - ry * GAMEPAD.gimbalRateDegS * dt);
+  if (rx !== 0) setGimbalX(mirror.gx + stepSign(GIMBAL.x) * rx * GAMEPAD.gimbalRateDegS * dt);
+  if (ry !== 0) setGimbalY(mirror.gy - stepSign(GIMBAL.y) * ry * GAMEPAD.gimbalRateDegS * dt);
 
   // --- Gripper joint J9: triggers (6 = LT close, 7 = RT open), analog ---
   const grip = val(7) - val(6);

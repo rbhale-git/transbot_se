@@ -1,19 +1,43 @@
 <launch>
   <!-- =====================================================================
-       transbot_dashboard.launch — rosbridge ONLY.
+       transbot_dashboard.launch — the COMPLETE robot-side stack for the
+       dashboard. This replaces the factory app autostart (which held the
+       camera exclusively and supervised its own duplicate of the stack).
 
-       Phase 1 discovery (FINDINGS.md) showed the factory stack autostarts
-       at boot with everything else the dashboard needs:
-         - transbot_driver.py (owns all hardware)
-         - web_video_server on :8080 (camera MJPEG, topic /image)
-       So the only missing piece is the WebSocket bridge. Do NOT include
-       bringup.launch here — a second driver instance collides with the
-       factory one and both die.
+       Starts:
+         1. driver bringup (transbot_driver.py owns all hardware, plus
+            DeviceSrv, IMU calib/filter, EKF, joint/robot state publishers)
+         2. usb_cam        -> /usb_cam/image_raw from /dev/video0
+         3. web_video_server -> MJPEG over HTTP :8080
+         4. rosbridge      -> WebSocket :9090
 
-       Deployed to ~/transbot_dashboard/ on the Jetson in Phase 2, after
-       ros-melodic-rosbridge-suite is installed (explicit go-ahead required).
+       Run by rosbridge-dashboard.service at boot (headless, no GUI needed).
+       The factory autostart entry is parked in ~/factory_autostart_disabled/
+       — restore it by moving bash.desktop back to ~/.config/autostart/ and
+       disabling this service.
        ===================================================================== -->
 
+  <!-- 1. Yahboom driver bringup -->
+  <include file="$(find transbot_bringup)/launch/bringup.launch" />
+
+  <!-- 2. Camera -->
+  <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen"
+        respawn="true" respawn_delay="5">
+    <param name="video_device" value="/dev/video0" />
+    <param name="image_width" value="640" />
+    <param name="image_height" value="480" />
+    <param name="pixel_format" value="yuyv" />
+    <param name="framerate" value="30" />
+    <param name="camera_frame_id" value="usb_cam" />
+  </node>
+
+  <!-- 3. MJPEG video server -->
+  <node name="web_video_server" pkg="web_video_server" type="web_video_server"
+        output="screen">
+    <param name="port" value="8080" />
+  </node>
+
+  <!-- 4. rosbridge WebSocket server -->
   <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
     <arg name="port" value="9090" />
   </include>

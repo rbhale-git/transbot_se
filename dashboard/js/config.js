@@ -21,14 +21,14 @@ export const PROFILES = {
     // ever reassigns it, the OLED shows the current IP (consider a router
     // DHCP reservation for the robot's MAC to pin it).
     rosbridgeUrl: 'ws://192.168.0.109:9090',
-    videoUrl: 'http://192.168.0.109:8080/stream?topic=/image&type=mjpeg',
+    videoUrl: 'http://192.168.0.109:8080/stream?topic=/usb_cam/image_raw&type=mjpeg',
   },
   hotspot: {
     label: 'ROBOT HOTSPOT',
     // Verified: robot is the gateway at 192.168.1.11 on its own "Transbot"
     // AP (WPA2, SSID "Transbot"). Camera topic /image per FINDINGS.md.
     rosbridgeUrl: 'ws://192.168.1.11:9090',
-    videoUrl: 'http://192.168.1.11:8080/stream?topic=/image&type=mjpeg',
+    videoUrl: 'http://192.168.1.11:8080/stream?topic=/usb_cam/image_raw&type=mjpeg',
   },
 };
 
@@ -75,11 +75,19 @@ export const MOTION = {
 };
 
 // ---- Gimbal ----------------------------------------------------------------
+// invertStep flips relative steps (keys/gamepad) when the servo's positive
+// direction doesn't match the operator's expectation. Absolute moves
+// (sliders, typed values, recenter) are unaffected.
 export const GIMBAL = {
-  x: { servoId: 1, min: 0, max: 180, home: 90 },  // pan
-  y: { servoId: 2, min: 0, max: 180, home: 90 },  // tilt
+  x: { servoId: 1, min: 0, max: 180, home: 90, invertStep: true },  // pan (verified on robot: + angle pans the "wrong" way for arrow keys)
+  y: { servoId: 2, min: 0, max: 180, home: 90, invertStep: false }, // tilt
   stepDeg: 3,
 };
+
+/** +1 or -1 multiplier for relative steps on an axis. */
+export function stepSign(axisCfg) {
+  return axisCfg.invertStep ? -1 : 1;
+}
 
 // ---- Arm -------------------------------------------------------------------
 // Three continuous DOF; servo 9 is the gripper joint (per brief) but is

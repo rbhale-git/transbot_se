@@ -9,7 +9,7 @@
 // int32 angle} — see FINDINGS.md.
 // ============================================================================
 
-import { TOPICS, GIMBAL, clamp } from '../config.js';
+import { TOPICS, GIMBAL, clamp, stepSign } from '../config.js';
 import { publish } from '../ros.js';
 
 // Commanded angles (degrees). Start at home; sync on recenter.
@@ -39,12 +39,12 @@ function publishAxis(axisCfg, angleDeg) {
 
 /** Step the pan servo by `direction` (+1 right, -1 left). */
 export function stepGimbalX(direction) {
-  setGimbalX(state.x + direction * GIMBAL.stepDeg);
+  setGimbalX(state.x + stepSign(GIMBAL.x) * direction * GIMBAL.stepDeg);
 }
 
 /** Step the tilt servo by `direction` (+1 up, -1 down). */
 export function stepGimbalY(direction) {
-  setGimbalY(state.y + direction * GIMBAL.stepDeg);
+  setGimbalY(state.y + stepSign(GIMBAL.y) * direction * GIMBAL.stepDeg);
 }
 
 /** Set the pan servo to an absolute angle (sliders / typed values). */

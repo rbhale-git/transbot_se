@@ -1,0 +1,11 @@
+[Unit]
+Description=Periodic Wi-Fi failover check for the Transbot
+
+[Timer]
+# First check 90s after boot (give NetworkManager's own autoconnect a fair
+# chance), then every 60s. Each check is a no-op while any Wi-Fi link is up.
+OnBootSec=90
+OnUnitActiveSec=60
+
+[Install]
+WantedBy=timers.target

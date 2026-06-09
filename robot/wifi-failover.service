@@ -1,0 +1,7 @@
+[Unit]
+Description=Wi-Fi failover check (home Wi-Fi -> robot hotspot)
+After=NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /home/jetson/transbot_dashboard/wifi_failover.sh

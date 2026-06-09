@@ -64,6 +64,21 @@ The dashboard config holds a named profile for each network (rosbridge URL and
 video URL per profile). Switching networks is a single profile selection — no
 code changes. The robot-side launch is identical on both networks.
 
+**Automatic failover (robot-side):** NetworkManager prefers home Wi-Fi
+(`home_wifi`, autoconnect priority 10) over the hotspot AP (`Transbot`,
+priority 0). On top of that, `wifi-failover.timer` runs
+`wifi_failover.sh` every 60 s: if the robot has **no** active Wi-Fi link it
+tries home Wi-Fi first (if the SSID is visible), otherwise it starts its own
+hotspot — so the robot is always reachable somewhere. The check never
+preempts an active link, so it can't drop a live teleop session.
+
+Manual switching on the robot:
+
+```bash
+sudo nmcli con up home_wifi   # join home Wi-Fi
+sudo nmcli con up Transbot    # start the hotspot AP
+```
+
 ## Status
 
 - [x] Phase 0 — repo + passwordless SSH to the Jetson

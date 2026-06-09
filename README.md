@@ -12,6 +12,22 @@ robot (Jetson Nano B01, ROS Melodic).
   It publishes control topics and subscribes to telemetry via rosbridge, and
   embeds the MJPEG stream. No ROS install needed on the laptop.
 
+## Network profiles
+
+The robot is reachable two ways, and both are first-class:
+
+- **Home Wi-Fi (primary, used for development):** the Jetson joins the same
+  Wi-Fi network as the laptop in client mode. Both devices keep internet
+  access, which is required for installing packages on the robot and for
+  development on the laptop.
+- **Robot hotspot (fallback, for use away from any Wi-Fi):** the laptop joins
+  the robot's own "transbot" access point. Fully offline operation; the laptop
+  has no internet while connected.
+
+The dashboard config holds a named profile for each network (rosbridge URL and
+video URL per profile). Switching networks is a single profile selection — no
+code changes. The robot-side launch is identical on both networks.
+
 ## Status
 
 - [x] Phase 0 — repo and SSH setup

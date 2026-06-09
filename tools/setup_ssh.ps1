@@ -44,7 +44,8 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host ""
 Write-Host "Verifying passwordless login..."
-ssh -o BatchMode=yes "$User@$JetsonIp" "echo PASSWORDLESS-OK on \$(hostname); uname -m; lsb_release -ds 2>/dev/null"
+# Single quotes: $(hostname) must reach the remote shell, not expand locally.
+ssh -o BatchMode=yes "$User@$JetsonIp" 'echo PASSWORDLESS-OK on $(hostname); uname -m; lsb_release -ds 2>/dev/null'
 if ($LASTEXITCODE -eq 0) {
     Write-Host ""
     Write-Host "Phase 0 SSH setup complete." -ForegroundColor Green

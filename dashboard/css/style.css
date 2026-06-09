@@ -349,6 +349,18 @@ main {
 }
 
 .panel.stale { opacity: 0.45; }
+.panel.stale::after {
+  content: "STALE";
+  position: absolute;
+  top: 9px; right: 12px;
+  font-family: var(--display);
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--amber);
+  border: 1px solid var(--amber);
+  padding: 1px 5px;
+  opacity: 0.9;
+}
 .panel.alert { border-color: var(--red); }
 .panel.alert .panel-title { color: var(--red); }
 .panel.alert .panel-title .num { color: var(--red); border-color: var(--red); }
@@ -425,6 +437,8 @@ main {
 }
 
 #video-nosignal {
+  position: relative;
+  z-index: 1;
   font-family: var(--display);
   color: var(--ink-dim);
   letter-spacing: 8px;
@@ -432,6 +446,24 @@ main {
   animation: nosignal 2.4s ease-in-out infinite;
 }
 @keyframes nosignal { 50% { opacity: 0.3; letter-spacing: 9px; } }
+
+/* faint animated static behind NO SIGNAL */
+#video-nosignal::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  z-index: -1;
+  opacity: 0.16;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23s)'/%3E%3C/svg%3E");
+  animation: static-jitter 0.45s steps(4) infinite;
+}
+@keyframes static-jitter {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-3%, 2%); }
+  50% { transform: translate(2%, -3%); }
+  75% { transform: translate(-2%, -2%); }
+  100% { transform: translate(3%, 3%); }
+}
 
 /* ---- Metrics ----------------------------------------------------------------------------- */
 
@@ -502,6 +534,15 @@ main {
 
 .power-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
 
+.batt-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3px;
+  font-size: 9px;
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+
 .warning {
   font-family: var(--display);
   color: var(--red);
@@ -547,6 +588,33 @@ main {
 }
 .kv.stacked { flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 6px; border-top: 1px dashed var(--line); padding-top: 8px; }
 .kv.stacked code { word-break: break-all; color: var(--ink); }
+
+/* ---- Gimbal position map ------------------------------------------------------------------------ */
+
+.gimbal-map {
+  position: relative;
+  height: 64px;
+  margin-bottom: 8px;
+  background:
+    /* crosshair through center */
+    linear-gradient(var(--line), var(--line)) 50% 0 / 1px 100% no-repeat,
+    linear-gradient(var(--line), var(--line)) 0 50% / 100% 1px no-repeat,
+    var(--bg-inset);
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 6px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.gimbal-dot {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 7px; height: 7px;
+  margin: -4px 0 0 -4px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--green);
+  transition: left 0.12s linear, top 0.12s linear;
+}
 
 /* ---- Axis controls (fader + numeric entry) ----------------------------------------------------- */
 
@@ -730,3 +798,13 @@ footer {
   opacity: 0.8;
 }
 @keyframes estop-flash { 50% { filter: brightness(1.7); } }
+
+/* ---- Keyboard accessibility ------------------------------------------------------------------------ */
+
+.hbtn:focus-visible,
+.panel-btn:focus-visible,
+.profile select:focus-visible,
+.ctl-slider:focus-visible {
+  outline: 1px solid var(--green);
+  outline-offset: 2px;
+}

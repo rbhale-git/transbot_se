@@ -91,6 +91,10 @@
           <span id="battery-warning" class="warning hidden">LOW BATTERY</span>
         </div>
         <div class="bar batt-bar"><div class="bar-fill batt" id="battery-bar"></div></div>
+        <div class="batt-scale">
+          <span id="batt-min"></span>
+          <span id="batt-max"></span>
+        </div>
       </section>
 
       <section id="imu-panel" class="panel" aria-label="imu">
@@ -104,6 +108,10 @@
 
       <section id="gimbal-panel" class="panel" aria-label="gimbal">
         <div class="panel-title"><span class="num">04</span>GIMBAL</div>
+        <!-- 2D position map: the dot is where the camera points -->
+        <div class="gimbal-map" aria-hidden="true">
+          <div class="gimbal-dot" id="gimbal-dot"></div>
+        </div>
         <!-- min/max/step are filled from config.js at boot — no values here -->
         <div class="ctl">
           <div class="ctl-head">

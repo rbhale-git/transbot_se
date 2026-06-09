@@ -127,6 +127,9 @@ function initImuPanel() {
 // ---- Power panel --------------------------------------------------------------
 
 function initPowerPanel() {
+  // Scale endpoints come from config so the bar is self-describing.
+  $('batt-min').textContent = `${POWER.lowVoltage.toFixed(1)}V`;
+  $('batt-max').textContent = `${POWER.fullVoltage.toFixed(1)}V`;
   let lastAt = 0;
   onTelemetry('battery', ({ voltage }) => {
     lastAt = performance.now();
@@ -200,9 +203,15 @@ function initGimbalPanel() {
     sliderId: 'gimbal-y-slider', numId: 'gimbal-y-num',
     min: GIMBAL.y.min, max: GIMBAL.y.max, set: setGimbalY,
   });
+  const dot = $('gimbal-dot');
   onGimbalChange(({ x, y }) => {
     pan.update(x);
     tilt.update(y);
+    // Position the map dot: x left→right, y bottom→top.
+    const px = ((x - GIMBAL.x.min) / (GIMBAL.x.max - GIMBAL.x.min)) * 100;
+    const py = (1 - (y - GIMBAL.y.min) / (GIMBAL.y.max - GIMBAL.y.min)) * 100;
+    dot.style.left = `${px}%`;
+    dot.style.top = `${py}%`;
   });
 }
 
@@ -315,7 +324,8 @@ function initEStopBanner() {
 // ---- Key legend (rendered from config so it can never drift) ------------------
 
 function initLegend() {
-  const pretty = (code) => code.replace('Key', '').replace('Arrow', '');
+  const GLYPHS = { ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓' };
+  const pretty = (code) => GLYPHS[code] ?? code.replace('Key', '').replace('Arrow', '');
   const kbd = (code) => `<kbd>${pretty(code)}</kbd>`;
   const m = KEYS.motion; const g = KEYS.gimbal; const a = KEYS.arm;
   const rows = [

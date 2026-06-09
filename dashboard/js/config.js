@@ -17,15 +17,18 @@ export const PROFILES = {
   },
   home: {
     label: 'HOME WIFI',
-    rosbridgeUrl: 'ws://192.168.1.11:9090',
+    // TO-VERIFY: robot's DHCP address once it joins the home network.
+    rosbridgeUrl: 'ws://192.168.1.50:9090',
     // TO-VERIFY: camera topic name comes from Phase 1 discovery.
-    videoUrl: 'http://192.168.1.11:8080/stream?topic=/usb_cam/image_raw&type=mjpeg',
+    videoUrl: 'http://192.168.1.50:8080/stream?topic=/usb_cam/image_raw&type=mjpeg',
   },
   hotspot: {
     label: 'ROBOT HOTSPOT',
-    // TO-VERIFY: Jetson IP in AP mode (note it next time the hotspot is used).
-    rosbridgeUrl: 'ws://192.168.8.1:9090',
-    videoUrl: 'http://192.168.8.1:8080/stream?topic=/usb_cam/image_raw&type=mjpeg',
+    // Verified: robot is the gateway at 192.168.1.11 on its own "Transbot"
+    // AP (WPA2, SSID "Transbot"). Note: same 192.168.1.x subnet as many home
+    // networks — the laptop can only be on one of the two at a time anyway.
+    rosbridgeUrl: 'ws://192.168.1.11:9090',
+    videoUrl: 'http://192.168.1.11:8080/stream?topic=/usb_cam/image_raw&type=mjpeg',
   },
 };
 

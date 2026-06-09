@@ -2,10 +2,9 @@
 # run_discovery.ps1 — Phase 1: run the read-only interface discovery on the
 # Jetson and pull the results back into the repo.
 #
-# PREREQUISITE: the robot bringup must already be running on the Jetson in a
-# separate terminal:
-#     ssh <user>@<ip>
-#     roslaunch transbot_bringup bringup.launch
+# PREREQUISITE: the robot is booted. The stock Yahboom image auto-starts the
+# Transbot driver at boot — do NOT launch bringup.launch manually (a second
+# driver instance fights the factory one and both die).
 #
 # Usage:  .\tools\run_discovery.ps1 -JetsonIp 192.168.1.11 -User jetson
 # Output: discovery\transbot_discovery.txt (then authored into FINDINGS.md)
@@ -18,7 +17,7 @@ param(
 $repoRoot = Split-Path $PSScriptRoot -Parent
 $target = "$User@$JetsonIp"
 
-Write-Host "Reminder: bringup.launch must be running on the robot already."
+Write-Host "Note: the Yahboom image auto-starts the driver at boot - no manual launch needed."
 Write-Host ""
 
 Write-Host "1/3 Copying discovery.sh to the robot..."

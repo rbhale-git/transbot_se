@@ -1,8 +1,9 @@
 #!/bin/bash
 # Phase 1 discovery script — run ON THE JETSON, read-only.
 #
-# Prerequisite: the robot bringup must already be running in another terminal:
-#   roslaunch transbot_bringup bringup.launch
+# Prerequisite: the driver must be running. On the stock Yahboom image the
+# Transbot stack AUTO-STARTS at boot, so normally nothing needs launching —
+# just boot the robot and run this.
 #
 # Usage:
 #   bash discovery.sh
@@ -10,7 +11,7 @@
 # Writes a full interface dump to ~/transbot_discovery.txt. Copy that file
 # back to the laptop (scp) to author FINDINGS.md from verified data.
 
-set -u
+# NOTE: no `set -u` — ROS setup scripts reference unset variables by design.
 source /opt/ros/melodic/setup.bash
 [ -f "$HOME/transbot_ws/devel/setup.bash" ] && source "$HOME/transbot_ws/devel/setup.bash"
 
@@ -73,6 +74,21 @@ rostopic list 2>/dev/null | grep -iE 'image|camera|usb_cam|compressed' >> "$OUT"
 
 section "REQUIRED PACKAGES INSTALLED?"
 dpkg -l ros-melodic-rosbridge-suite ros-melodic-web-video-server >> "$OUT" 2>&1
+
+section "AUTOSTART MECHANISM (factory stack starts at boot - find out how)"
+echo "--- systemd units mentioning transbot/ros ---" >> "$OUT"
+systemctl list-unit-files 2>/dev/null | grep -iE 'transbot|ros|yahboom' >> "$OUT"
+echo "--- desktop autostart entries ---" >> "$OUT"
+ls -la "$HOME/.config/autostart/" >> "$OUT" 2>&1
+for f in "$HOME"/.config/autostart/*.desktop; do
+    [ -f "$f" ] && { echo "-- $f:" >> "$OUT"; cat "$f" >> "$OUT"; }
+done
+echo "--- rc.local ---" >> "$OUT"
+cat /etc/rc.local >> "$OUT" 2>&1
+echo "--- crontab ---" >> "$OUT"
+crontab -l >> "$OUT" 2>&1
+echo "--- running ros-related processes ---" >> "$OUT"
+ps aux | grep -iE 'ros|transbot' | grep -v grep >> "$OUT" 2>&1
 
 section "DONE"
 echo "Wrote $OUT"

@@ -18,6 +18,20 @@ source /opt/ros/melodic/setup.bash
 OUT="$HOME/transbot_discovery.txt"
 : > "$OUT"
 
+# The factory stack starts via desktop autologin and can take a couple of
+# minutes after power-on. Wait for the ROS master rather than failing fast.
+echo "Waiting for ROS master (up to 180s)..."
+for i in $(seq 1 36); do
+    if rostopic list >/dev/null 2>&1; then
+        echo "ROS master is up."
+        break
+    fi
+    if [ "$i" -eq 36 ]; then
+        echo "WARNING: ROS master never came up - topic sections will be empty." | tee -a "$OUT"
+    fi
+    sleep 5
+done
+
 section() {
     echo ""            >> "$OUT"
     echo "=== $1 ==="  >> "$OUT"
@@ -89,6 +103,8 @@ echo "--- crontab ---" >> "$OUT"
 crontab -l >> "$OUT" 2>&1
 echo "--- running ros-related processes ---" >> "$OUT"
 ps aux | grep -iE 'ros|transbot' | grep -v grep >> "$OUT" 2>&1
+echo "--- start_transbot.sh (what the factory autostart launches) ---" >> "$OUT"
+cat "$HOME/Transbot/transbot/start_transbot.sh" >> "$OUT" 2>&1
 
 section "DONE"
 echo "Wrote $OUT"

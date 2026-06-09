@@ -1,0 +1,90 @@
+
+=== ROS VERSION / ENV ===
+melodic
+ROS_MASTER_URI=http://localhost:11311
+
+=== NODES ===
+ERROR: Unable to communicate with master!
+
+=== TOPIC LIST ===
+ERROR: Unable to communicate with master!
+
+=== TOPIC INFO + MESSAGE DEFINITIONS ===
+
+=== SERVICE LIST ===
+ERROR: Unable to communicate with master!
+
+=== SERVICE TYPES + DEFINITIONS ===
+
+=== TOPIC SAMPLES (one message each, 5s timeout, telemetry only) ===
+
+=== CAMERA TOPIC CANDIDATES ===
+
+=== REQUIRED PACKAGES INSTALLED? ===
+dpkg-query: no packages found matching ros-melodic-rosbridge-suite
+Desired=Unknown/Install/Remove/Purge/Hold
+| Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend
+|/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
+||/ Name                         Version                       Architecture Description
++++-============================-=============================-============-======================================================
+ii  ros-melodic-web-video-server 0.2.1-1bionic.20210922.043652 arm64        HTTP Streaming of ROS Image Topics in Multiple Formats
+
+=== AUTOSTART MECHANISM (factory stack starts at boot - find out how) ===
+--- systemd units mentioning transbot/ros ---
+yb-transbot_oled.service                   enabled        
+--- desktop autostart entries ---
+total 24
+drwxrwxr-x  2 jetson jetson 4096 May 13  2023 .
+drwx------ 25 jetson jetson 4096 May 16  2023 ..
+-rw-rw-r--  1 jetson jetson  278 May 13  2023 bash.desktop
+-rw-r--r--  1 jetson jetson  211 May  7 19:54 indicator-sysmonitor.desktop
+-rw-rw-r--  1 jetson jetson  100 Apr 30 17:33 vino-server.desktop
+-rw-rw-r--  1 jetson jetson  169 Oct 18  2021 xrandr.desktop
+-- /home/jetson/.config/autostart/bash.desktop:
+[Desktop Entry]
+Type=Application
+Exec=bash /home/jetson/Transbot/transbot/start_transbot.sh
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name[en_GB]=start_transbot
+Name=start_transbot
+Comment[en_GB]=start transbot main program
+Comment=start transbot main program
+-- /home/jetson/.config/autostart/indicator-sysmonitor.desktop:
+[Desktop Entry]
+Name=System Monitor Indicator
+Comment=Basic sysmonitor indicator applet
+Exec=indicator-sysmonitor
+Terminal=false
+StartupNotify=true
+Type=Application
+Categories=Utility;
+Icon=gnome-system-monitor
+-- /home/jetson/.config/autostart/vino-server.desktop:
+[Desktop Entry]
+Type=Application
+Name=Vino VNC server
+Exec=/usr/lib/vino/vino-server
+NoDisplay=true
+-- /home/jetson/.config/autostart/xrandr.desktop:
+[Desktop Entry]
+Type=Application
+Exec=xrandr --fb 1024x600
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name[en_GB]=VNC
+Name=VNC
+Comment[en_GB]=
+Comment=
+--- rc.local ---
+cat: /etc/rc.local: No such file or directory
+--- crontab ---
+no crontab for jetson
+--- running ros-related processes ---
+avahi     4324  0.0  0.0   6168  3132 ?        Ss   22:20   0:00 avahi-daemon: running [Transbot.local]
+jetson    6837  0.0  0.0   1912   464 ?        Ss   22:21   0:00 /bin/sh -c python3 /home/jetson/Transbot/transbot/oled_transbot.py
+jetson    6873 12.0  0.4  35088 19728 ?        D    22:21   0:44 python3 /home/jetson/Transbot/transbot/oled_transbot.py
+
+=== DONE ===

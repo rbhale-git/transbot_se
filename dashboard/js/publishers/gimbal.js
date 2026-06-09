@@ -5,8 +5,8 @@
 // positions) and exposes step/recenter functions. All angles clamp to the
 // configured [min, max] before publishing.
 //
-// TO-VERIFY (Phase 1): exact message type and field names for /PWMServo.
-// buildPwmServoMessage() is the single place to fix once discovered.
+// Message shape VERIFIED in Phase 1: transbot_msgs/PWMServo {int32 id,
+// int32 angle} — see FINDINGS.md.
 // ============================================================================
 
 import { TOPICS, GIMBAL, clamp } from '../config.js';
@@ -26,7 +26,7 @@ function notify() {
   for (const fn of listeners) fn({ ...state });
 }
 
-/** TO-VERIFY: assumed field layout {id, angle} from vendor docs. */
+/** Verified: transbot_msgs/PWMServo = {int32 id, int32 angle}. */
 function buildPwmServoMessage(servoId, angleDeg) {
   return { id: servoId, angle: Math.round(angleDeg) };
 }

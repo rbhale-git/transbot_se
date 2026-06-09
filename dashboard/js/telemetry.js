@@ -40,9 +40,9 @@ function extractImu(msg) {
 }
 
 function extractBattery(msg) {
-  // std_msgs/Float32 {data} or a custom field name.
-  const v = typeof msg?.data === 'number' ? msg.data
-    : typeof msg?.voltage === 'number' ? msg.voltage
+  // Verified: transbot_msgs/Battery = {float32 Voltage} (capital V).
+  const v = typeof msg?.Voltage === 'number' ? msg.Voltage
+    : typeof msg?.data === 'number' ? msg.data
     : typeof msg === 'number' ? msg : null;
   return { voltage: v, raw: msg };
 }
@@ -56,10 +56,11 @@ function startSubscriptions() {
   unsubs.push(subscribe(TOPICS.battery, (m) => emit('battery', extractBattery(m))));
 
   // Poll arm joint angles via the /CurrentAngle service.
+  // Verified request shape: {apply: string}; response: {RobotArm: {joint: []}}.
   armPollTimer = setInterval(async () => {
     if (!isConnected()) return;
     try {
-      const resp = await callService(SERVICES.currentAngle, {});
+      const resp = await callService(SERVICES.currentAngle, { apply: 'GetJoint' });
       emit('arm', { ok: true, raw: resp });
     } catch {
       emit('arm', { ok: false, raw: null });

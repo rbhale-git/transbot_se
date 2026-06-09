@@ -66,13 +66,16 @@ code changes. The robot-side launch is identical on both networks.
 
 ## Status
 
-- [x] Phase 0 (partial) — repo created; SSH setup pending robot availability
-- [ ] Phase 1 — interface discovery on the robot (`FINDINGS.md`)
-- [ ] Phase 2 — robot-side setup (rosbridge + web_video_server + launch file)
-- [x] Phase 3 (against mock) — dashboard built and tested against a local mock
-      rosbridge; custom message types marked TO-VERIFY until Phase 1
+- [x] Phase 0 — repo + passwordless SSH to the Jetson
+- [x] Phase 1 — interface discovery complete, see `FINDINGS.md`; all message
+      shapes verified and config updated (camera topic `/image`, battery
+      `/voltage` `{Voltage}`, IMU `/imu/data`)
+- [ ] Phase 2 — install rosbridge-suite on the robot (the ONLY missing piece:
+      driver and web_video_server already autostart with the factory stack)
+- [x] Phase 3 — dashboard built and tested against the mock (which mirrors
+      the verified interface)
 - [ ] Phase 4 — test and safety pass on the real robot
-- [ ] Phase 5 — docs
+- [ ] Phase 5 — docs (architecture/config/extending sections already drafted)
 
 ## Running the dashboard (mock mode, no robot needed)
 

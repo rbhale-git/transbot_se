@@ -31,11 +31,11 @@ async def expect(ws, predicate, timeout=3.0, what=""):
 
 async def main():
     async with connect(URL) as ws:
-        # 1. battery telemetry
-        await ws.send(json.dumps({"op": "subscribe", "topic": "/voltage", "type": "std_msgs/Float32"}))
+        # 1. battery telemetry (verified shape: transbot_msgs/Battery {Voltage})
+        await ws.send(json.dumps({"op": "subscribe", "topic": "/voltage", "type": "transbot_msgs/Battery"}))
         m = await expect(ws, lambda m: m.get("topic") == "/voltage", what="/voltage publish")
-        assert isinstance(m["msg"]["data"], (int, float)), m
-        print(f"PASS  /voltage publish received: {m['msg']['data']} V")
+        assert isinstance(m["msg"]["Voltage"], (int, float)), m
+        print(f"PASS  /voltage publish received: {m['msg']['Voltage']} V")
 
         # 2. cmd_vel accepted and echoed in measured velocity
         await ws.send(json.dumps({"op": "subscribe", "topic": "/transbot/get_vel", "type": "geometry_msgs/Twist"}))
@@ -48,11 +48,12 @@ async def main():
         )
         print(f"PASS  /transbot/get_vel echoes cmd: lin={m['msg']['linear']['x']:.3f}")
 
-        # 3. /CurrentAngle service
-        await ws.send(json.dumps({"op": "call_service", "service": "/CurrentAngle", "id": "t1"}))
+        # 3. /CurrentAngle service (verified: request {apply}, response RobotArm.joint)
+        await ws.send(json.dumps({"op": "call_service", "service": "/CurrentAngle",
+                                  "args": {"apply": "GetJoint"}, "id": "t1"}))
         m = await expect(ws, lambda m: m.get("op") == "service_response" and m.get("id") == "t1",
                          what="/CurrentAngle response")
-        angles = {a["id"]: a["angle"] for a in m["values"]["angles"]}
+        angles = {a["id"]: a["angle"] for a in m["values"]["RobotArm"]["joint"]}
         assert set(angles) == {7, 8, 9}, angles
         print(f"PASS  /CurrentAngle responds: {angles}")
 
@@ -60,10 +61,11 @@ async def main():
         await ws.send(json.dumps({"op": "publish", "topic": "/TargetAngle", "msg": {
             "joint": [{"id": 7, "angle": 42, "run_time": 800}]}}))
         await asyncio.sleep(0.1)
-        await ws.send(json.dumps({"op": "call_service", "service": "/CurrentAngle", "id": "t2"}))
+        await ws.send(json.dumps({"op": "call_service", "service": "/CurrentAngle",
+                                  "args": {"apply": "GetJoint"}, "id": "t2"}))
         m = await expect(ws, lambda m: m.get("op") == "service_response" and m.get("id") == "t2",
                          what="/CurrentAngle after TargetAngle")
-        angles = {a["id"]: a["angle"] for a in m["values"]["angles"]}
+        angles = {a["id"]: a["angle"] for a in m["values"]["RobotArm"]["joint"]}
         assert angles[7] == 42, angles
         print(f"PASS  /TargetAngle updates pose: j7={angles[7]}")
 

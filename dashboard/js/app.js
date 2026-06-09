@@ -215,8 +215,15 @@ function initArmPanel() {
     for (const key of Object.keys(controls)) controls[key].update(angles[key]);
   });
   onTelemetry('arm', ({ ok, raw }) => {
-    // Response shape unverified until Phase 1 — render whatever came back.
-    $('arm-current').textContent = ok ? JSON.stringify(raw) : 'no response';
+    // Verified shape: {RobotArm: {joint: [{id, run_time, angle}]}}.
+    const joints = raw?.RobotArm?.joint;
+    if (ok && Array.isArray(joints)) {
+      $('arm-current').textContent = joints
+        .map((j) => `J${j.id} ${Number(j.angle).toFixed(0)}°`)
+        .join('  ');
+    } else {
+      $('arm-current').textContent = ok ? JSON.stringify(raw) : 'no response';
+    }
   });
 }
 

@@ -7,9 +7,8 @@
 // moderate run_time so joints never slam (brief safety requirement). All
 // angles clamp to configured ranges before publishing.
 //
-// TO-VERIFY (Phase 1): exact message type and field names for /TargetAngle,
-// and which servo is truly the gripper.
-// buildArmMessage() is the single place to fix once discovered.
+// Message shape VERIFIED in Phase 1: transbot_msgs/Arm {Joint[] joint},
+// Joint = {int32 id, int32 run_time, float32 angle} — see FINDINGS.md.
 // ============================================================================
 
 import { TOPICS, ARM, clamp } from '../config.js';
@@ -34,8 +33,7 @@ function notify() {
   for (const fn of listeners) fn(snapshot());
 }
 
-/** TO-VERIFY: assumed layout {id, angle, run_time} per joint, wrapped in a
- *  joint array — vendor-doc hint, must match rosmsg show output. */
+/** Verified: transbot_msgs/Arm = {joint: [{id, run_time, angle}]}. */
 function buildArmMessage(moves) {
   return {
     joint: moves.map(({ servoId, angleDeg }) => ({

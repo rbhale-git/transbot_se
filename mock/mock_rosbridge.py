@@ -74,10 +74,14 @@ def handle_publish(topic: str, msg: dict) -> None:
 
 def service_response(service: str, call_id):
     if service == "/CurrentAngle":
+        # Verified shape (FINDINGS.md): response is RobotArm: {joint: [...]}.
         values = {
-            "angles": [
-                {"id": jid, "angle": angle} for jid, angle in state["arm"].items()
-            ]
+            "RobotArm": {
+                "joint": [
+                    {"id": jid, "run_time": 0, "angle": angle}
+                    for jid, angle in state["arm"].items()
+                ]
+            }
         }
     elif service == "/rosapi/get_time":
         # Standard rosapi service; the dashboard uses it to measure RTT.
@@ -120,13 +124,15 @@ def gen_battery() -> dict:
     state["battery"] -= 0.02
     if state["battery"] < 9.5:
         state["battery"] = 12.4
-    return {"data": round(state["battery"], 2)}
+    # Verified shape (FINDINGS.md): transbot_msgs/Battery = {Voltage}.
+    return {"Voltage": round(state["battery"], 2)}
 
 
 # topic -> (message generator, publish period in seconds)
+# Topic names mirror the real robot (FINDINGS.md); /imu/data is the filtered IMU.
 TELEMETRY = {
     "/transbot/get_vel": (gen_get_vel, 0.1),
-    "/transbot/imu": (gen_imu, 0.2),
+    "/imu/data": (gen_imu, 0.2),
     "/voltage": (gen_battery, 1.0),
 }
 

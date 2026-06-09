@@ -4,21 +4,3445 @@ melodic
 ROS_MASTER_URI=http://localhost:11311
 
 === NODES ===
-ERROR: Unable to communicate with master!
+/BigTransbot
+/DeviceSrv
+/TransbotPatrol
+/apply_calib
+/base_link_to_imu_link
+/base_node
+/contour_moments
+/edge_detection
+/ekf_localization
+/imu_filter_madgwick
+/joint_state_publisher
+/joy_node
+/msgToimg
+/robot_state_publisher
+/rosout
+/transbot_joy
+/transbot_node
+/web_video_server
 
 === TOPIC LIST ===
-ERROR: Unable to communicate with master!
+/Adjust
+/Autopilot
+/Buzzer
+/Current_point
+/Graphics_topic
+/JoyState
+/PWMServo
+/PatrolWarning
+/TargetAngle
+/TransbotPatrol/parameter_descriptions
+/TransbotPatrol/parameter_updates
+/cmd_vel
+/colorTracker
+/contour_moments/image
+/contour_moments/image/compressed
+/contour_moments/image/compressed/parameter_descriptions
+/contour_moments/image/compressed/parameter_updates
+/contour_moments/image/compressedDepth
+/contour_moments/image/compressedDepth/parameter_descriptions
+/contour_moments/image/compressedDepth/parameter_updates
+/contour_moments/image/theora
+/contour_moments/image/theora/parameter_descriptions
+/contour_moments/image/theora/parameter_updates
+/contour_moments/moments
+/contour_moments/parameter_descriptions
+/contour_moments/parameter_updates
+/diagnostics
+/edge_detection/image
+/edge_detection/image/compressed
+/edge_detection/image/compressed/parameter_descriptions
+/edge_detection/image/compressed/parameter_updates
+/edge_detection/image/compressedDepth
+/edge_detection/image/compressedDepth/parameter_descriptions
+/edge_detection/image/compressedDepth/parameter_updates
+/edge_detection/image/theora
+/edge_detection/image/theora/parameter_descriptions
+/edge_detection/image/theora/parameter_updates
+/edge_detection/parameter_descriptions
+/edge_detection/parameter_updates
+/edition
+/image
+/image_msg
+/imu/data
+/imu/data_raw
+/imu_filter_madgwick/parameter_descriptions
+/imu_filter_madgwick/parameter_updates
+/joint_states
+/joy
+/joy/set_feedback
+/move_base/cancel
+/odom
+/odom_raw
+/rosout
+/rosout_agg
+/set_pose
+/tf
+/tf_static
+/transbot/get_vel
+/transbot/imu
+/transbot_node/parameter_descriptions
+/transbot_node/parameter_updates
+/voltage
 
 === TOPIC INFO + MESSAGE DEFINITIONS ===
 
+--- topic: /Adjust ---
+Type: transbot_msgs/Adjust
+
+Publishers: 
+ * /transbot_joy (http://192.168.1.11:42803/)
+
+Subscribers: 
+ * /transbot_node (http://192.168.1.11:34773/)
+
+
+fields of transbot_msgs/Adjust:
+bool adjust
+
+
+--- topic: /Autopilot ---
+Type: transbot_msgs/General
+
+Publishers: 
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+ * /BigTransbot (http://192.168.1.11:40475/)
+
+Subscribers: None
+
+
+fields of transbot_msgs/General:
+string Graphics
+string TrackState
+
+
+--- topic: /Buzzer ---
+Type: std_msgs/Bool
+
+Publishers: None
+
+Subscribers: 
+ * /transbot_node (http://192.168.1.11:34773/)
+
+
+fields of std_msgs/Bool:
+bool data
+
+
+--- topic: /Current_point ---
+Type: transbot_msgs/Position
+
+Publishers: 
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+ * /BigTransbot (http://192.168.1.11:40475/)
+
+Subscribers: None
+
+
+fields of transbot_msgs/Position:
+float32 angleX
+float32 angleY
+float32 distance
+
+
+--- topic: /Graphics_topic ---
+Type: transbot_msgs/General
+
+Publishers: 
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+ * /BigTransbot (http://192.168.1.11:40475/)
+
+Subscribers: None
+
+
+fields of transbot_msgs/General:
+string Graphics
+string TrackState
+
+
+--- topic: /JoyState ---
+Type: transbot_msgs/JoyState
+
+Publishers: 
+ * /transbot_joy (http://192.168.1.11:42803/)
+
+Subscribers: 
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+ * /BigTransbot (http://192.168.1.11:40475/)
+
+
+fields of transbot_msgs/JoyState:
+bool state
+
+
+--- topic: /PWMServo ---
+Type: transbot_msgs/PWMServo
+
+Publishers: 
+ * /transbot_joy (http://192.168.1.11:42803/)
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+ * /BigTransbot (http://192.168.1.11:40475/)
+
+Subscribers: 
+ * /transbot_node (http://192.168.1.11:34773/)
+
+
+fields of transbot_msgs/PWMServo:
+int32 id
+int32 angle
+
+
+--- topic: /PatrolWarning ---
+Type: transbot_msgs/PatrolWarning
+
+Publishers: 
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+ * /BigTransbot (http://192.168.1.11:40475/)
+
+Subscribers: 
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+
+
+fields of transbot_msgs/PatrolWarning:
+float32 speed
+string Function
+float32 ResponseDist
+int32 LaserAngle
+
+
+--- topic: /TargetAngle ---
+Type: transbot_msgs/Arm
+
+Publishers: 
+ * /transbot_joy (http://192.168.1.11:42803/)
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+ * /BigTransbot (http://192.168.1.11:40475/)
+
+Subscribers: 
+ * /transbot_node (http://192.168.1.11:34773/)
+
+
+fields of transbot_msgs/Arm:
+transbot_msgs/Joint[] joint
+  int32 id
+  int32 run_time
+  float32 angle
+
+
+--- topic: /TransbotPatrol/parameter_descriptions ---
+Type: dynamic_reconfigure/ConfigDescription
+
+Publishers: 
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+
+Subscribers: 
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+
+
+fields of dynamic_reconfigure/ConfigDescription:
+dynamic_reconfigure/Group[] groups
+  string name
+  string type
+  dynamic_reconfigure/ParamDescription[] parameters
+    string name
+    string type
+    uint32 level
+    string description
+    string edit_method
+  int32 parent
+  int32 id
+dynamic_reconfigure/Config max
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config min
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config dflt
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- topic: /TransbotPatrol/parameter_updates ---
+Type: dynamic_reconfigure/Config
+
+Publishers: 
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+
+Subscribers: 
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+
+
+fields of dynamic_reconfigure/Config:
+dynamic_reconfigure/BoolParameter[] bools
+  string name
+  bool value
+dynamic_reconfigure/IntParameter[] ints
+  string name
+  int32 value
+dynamic_reconfigure/StrParameter[] strs
+  string name
+  string value
+dynamic_reconfigure/DoubleParameter[] doubles
+  string name
+  float64 value
+dynamic_reconfigure/GroupState[] groups
+  string name
+  bool state
+  int32 id
+  int32 parent
+
+
+--- topic: /cmd_vel ---
+Type: geometry_msgs/Twist
+
+Publishers: 
+ * /transbot_joy (http://192.168.1.11:42803/)
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+ * /BigTransbot (http://192.168.1.11:40475/)
+
+Subscribers: 
+ * /transbot_node (http://192.168.1.11:34773/)
+
+
+fields of geometry_msgs/Twist:
+geometry_msgs/Vector3 linear
+  float64 x
+  float64 y
+  float64 z
+geometry_msgs/Vector3 angular
+  float64 x
+  float64 y
+  float64 z
+
+
+--- topic: /colorTracker ---
+Type: transbot_msgs/General
+
+Publishers: 
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+ * /BigTransbot (http://192.168.1.11:40475/)
+
+Subscribers: None
+
+
+fields of transbot_msgs/General:
+string Graphics
+string TrackState
+
+
+--- topic: /contour_moments/image ---
+Type: sensor_msgs/Image
+
+Publishers: 
+ * /contour_moments (http://192.168.1.11:38255/)
+
+Subscribers: None
+
+
+fields of sensor_msgs/Image:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+uint32 height
+uint32 width
+string encoding
+uint8 is_bigendian
+uint32 step
+uint8[] data
+
+
+--- topic: /contour_moments/image/compressed ---
+Type: sensor_msgs/CompressedImage
+
+Publishers: 
+ * /contour_moments (http://192.168.1.11:38255/)
+
+Subscribers: None
+
+
+fields of sensor_msgs/CompressedImage:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+string format
+uint8[] data
+
+
+--- topic: /contour_moments/image/compressed/parameter_descriptions ---
+Type: dynamic_reconfigure/ConfigDescription
+
+Publishers: 
+ * /contour_moments (http://192.168.1.11:38255/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/ConfigDescription:
+dynamic_reconfigure/Group[] groups
+  string name
+  string type
+  dynamic_reconfigure/ParamDescription[] parameters
+    string name
+    string type
+    uint32 level
+    string description
+    string edit_method
+  int32 parent
+  int32 id
+dynamic_reconfigure/Config max
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config min
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config dflt
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- topic: /contour_moments/image/compressed/parameter_updates ---
+Type: dynamic_reconfigure/Config
+
+Publishers: 
+ * /contour_moments (http://192.168.1.11:38255/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/Config:
+dynamic_reconfigure/BoolParameter[] bools
+  string name
+  bool value
+dynamic_reconfigure/IntParameter[] ints
+  string name
+  int32 value
+dynamic_reconfigure/StrParameter[] strs
+  string name
+  string value
+dynamic_reconfigure/DoubleParameter[] doubles
+  string name
+  float64 value
+dynamic_reconfigure/GroupState[] groups
+  string name
+  bool state
+  int32 id
+  int32 parent
+
+
+--- topic: /contour_moments/image/compressedDepth ---
+Type: sensor_msgs/CompressedImage
+
+Publishers: 
+ * /contour_moments (http://192.168.1.11:38255/)
+
+Subscribers: None
+
+
+fields of sensor_msgs/CompressedImage:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+string format
+uint8[] data
+
+
+--- topic: /contour_moments/image/compressedDepth/parameter_descriptions ---
+Type: dynamic_reconfigure/ConfigDescription
+
+Publishers: 
+ * /contour_moments (http://192.168.1.11:38255/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/ConfigDescription:
+dynamic_reconfigure/Group[] groups
+  string name
+  string type
+  dynamic_reconfigure/ParamDescription[] parameters
+    string name
+    string type
+    uint32 level
+    string description
+    string edit_method
+  int32 parent
+  int32 id
+dynamic_reconfigure/Config max
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config min
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config dflt
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- topic: /contour_moments/image/compressedDepth/parameter_updates ---
+Type: dynamic_reconfigure/Config
+
+Publishers: 
+ * /contour_moments (http://192.168.1.11:38255/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/Config:
+dynamic_reconfigure/BoolParameter[] bools
+  string name
+  bool value
+dynamic_reconfigure/IntParameter[] ints
+  string name
+  int32 value
+dynamic_reconfigure/StrParameter[] strs
+  string name
+  string value
+dynamic_reconfigure/DoubleParameter[] doubles
+  string name
+  float64 value
+dynamic_reconfigure/GroupState[] groups
+  string name
+  bool state
+  int32 id
+  int32 parent
+
+
+--- topic: /contour_moments/image/theora ---
+Type: theora_image_transport/Packet
+
+Publishers: 
+ * /contour_moments (http://192.168.1.11:38255/)
+
+Subscribers: None
+
+
+fields of theora_image_transport/Packet:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+uint8[] data
+int32 b_o_s
+int32 e_o_s
+int64 granulepos
+int64 packetno
+
+
+--- topic: /contour_moments/image/theora/parameter_descriptions ---
+Type: dynamic_reconfigure/ConfigDescription
+
+Publishers: 
+ * /contour_moments (http://192.168.1.11:38255/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/ConfigDescription:
+dynamic_reconfigure/Group[] groups
+  string name
+  string type
+  dynamic_reconfigure/ParamDescription[] parameters
+    string name
+    string type
+    uint32 level
+    string description
+    string edit_method
+  int32 parent
+  int32 id
+dynamic_reconfigure/Config max
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config min
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config dflt
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- topic: /contour_moments/image/theora/parameter_updates ---
+Type: dynamic_reconfigure/Config
+
+Publishers: 
+ * /contour_moments (http://192.168.1.11:38255/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/Config:
+dynamic_reconfigure/BoolParameter[] bools
+  string name
+  bool value
+dynamic_reconfigure/IntParameter[] ints
+  string name
+  int32 value
+dynamic_reconfigure/StrParameter[] strs
+  string name
+  string value
+dynamic_reconfigure/DoubleParameter[] doubles
+  string name
+  float64 value
+dynamic_reconfigure/GroupState[] groups
+  string name
+  bool state
+  int32 id
+  int32 parent
+
+
+--- topic: /contour_moments/moments ---
+Type: opencv_apps/MomentArrayStamped
+
+Publishers: 
+ * /contour_moments (http://192.168.1.11:38255/)
+
+Subscribers: None
+
+
+fields of opencv_apps/MomentArrayStamped:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+opencv_apps/Moment[] moments
+  float64 m00
+  float64 m10
+  float64 m01
+  float64 m20
+  float64 m11
+  float64 m02
+  float64 m30
+  float64 m21
+  float64 m12
+  float64 m03
+  float64 mu20
+  float64 mu11
+  float64 mu02
+  float64 mu30
+  float64 mu21
+  float64 mu12
+  float64 mu03
+  float64 nu20
+  float64 nu11
+  float64 nu02
+  float64 nu30
+  float64 nu21
+  float64 nu12
+  float64 nu03
+  opencv_apps/Point2D center
+    float64 x
+    float64 y
+  float64 length
+  float64 area
+
+
+--- topic: /contour_moments/parameter_descriptions ---
+Type: dynamic_reconfigure/ConfigDescription
+
+Publishers: 
+ * /contour_moments (http://192.168.1.11:38255/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/ConfigDescription:
+dynamic_reconfigure/Group[] groups
+  string name
+  string type
+  dynamic_reconfigure/ParamDescription[] parameters
+    string name
+    string type
+    uint32 level
+    string description
+    string edit_method
+  int32 parent
+  int32 id
+dynamic_reconfigure/Config max
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config min
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config dflt
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- topic: /contour_moments/parameter_updates ---
+Type: dynamic_reconfigure/Config
+
+Publishers: 
+ * /contour_moments (http://192.168.1.11:38255/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/Config:
+dynamic_reconfigure/BoolParameter[] bools
+  string name
+  bool value
+dynamic_reconfigure/IntParameter[] ints
+  string name
+  int32 value
+dynamic_reconfigure/StrParameter[] strs
+  string name
+  string value
+dynamic_reconfigure/DoubleParameter[] doubles
+  string name
+  float64 value
+dynamic_reconfigure/GroupState[] groups
+  string name
+  bool state
+  int32 id
+  int32 parent
+
+
+--- topic: /diagnostics ---
+Type: diagnostic_msgs/DiagnosticArray
+
+Publishers: 
+ * /joy_node (http://192.168.1.11:40077/)
+ * /ekf_localization (http://192.168.1.11:36011/)
+
+Subscribers: None
+
+
+fields of diagnostic_msgs/DiagnosticArray:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+diagnostic_msgs/DiagnosticStatus[] status
+  byte OK=0
+  byte WARN=1
+  byte ERROR=2
+  byte STALE=3
+  byte level
+  string name
+  string message
+  string hardware_id
+  diagnostic_msgs/KeyValue[] values
+    string key
+    string value
+
+
+--- topic: /edge_detection/image ---
+Type: sensor_msgs/Image
+
+Publishers: 
+ * /edge_detection (http://192.168.1.11:41383/)
+
+Subscribers: None
+
+
+fields of sensor_msgs/Image:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+uint32 height
+uint32 width
+string encoding
+uint8 is_bigendian
+uint32 step
+uint8[] data
+
+
+--- topic: /edge_detection/image/compressed ---
+Type: sensor_msgs/CompressedImage
+
+Publishers: 
+ * /edge_detection (http://192.168.1.11:41383/)
+
+Subscribers: None
+
+
+fields of sensor_msgs/CompressedImage:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+string format
+uint8[] data
+
+
+--- topic: /edge_detection/image/compressed/parameter_descriptions ---
+Type: dynamic_reconfigure/ConfigDescription
+
+Publishers: 
+ * /edge_detection (http://192.168.1.11:41383/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/ConfigDescription:
+dynamic_reconfigure/Group[] groups
+  string name
+  string type
+  dynamic_reconfigure/ParamDescription[] parameters
+    string name
+    string type
+    uint32 level
+    string description
+    string edit_method
+  int32 parent
+  int32 id
+dynamic_reconfigure/Config max
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config min
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config dflt
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- topic: /edge_detection/image/compressed/parameter_updates ---
+Type: dynamic_reconfigure/Config
+
+Publishers: 
+ * /edge_detection (http://192.168.1.11:41383/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/Config:
+dynamic_reconfigure/BoolParameter[] bools
+  string name
+  bool value
+dynamic_reconfigure/IntParameter[] ints
+  string name
+  int32 value
+dynamic_reconfigure/StrParameter[] strs
+  string name
+  string value
+dynamic_reconfigure/DoubleParameter[] doubles
+  string name
+  float64 value
+dynamic_reconfigure/GroupState[] groups
+  string name
+  bool state
+  int32 id
+  int32 parent
+
+
+--- topic: /edge_detection/image/compressedDepth ---
+Type: sensor_msgs/CompressedImage
+
+Publishers: 
+ * /edge_detection (http://192.168.1.11:41383/)
+
+Subscribers: None
+
+
+fields of sensor_msgs/CompressedImage:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+string format
+uint8[] data
+
+
+--- topic: /edge_detection/image/compressedDepth/parameter_descriptions ---
+Type: dynamic_reconfigure/ConfigDescription
+
+Publishers: 
+ * /edge_detection (http://192.168.1.11:41383/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/ConfigDescription:
+dynamic_reconfigure/Group[] groups
+  string name
+  string type
+  dynamic_reconfigure/ParamDescription[] parameters
+    string name
+    string type
+    uint32 level
+    string description
+    string edit_method
+  int32 parent
+  int32 id
+dynamic_reconfigure/Config max
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config min
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config dflt
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- topic: /edge_detection/image/compressedDepth/parameter_updates ---
+Type: dynamic_reconfigure/Config
+
+Publishers: 
+ * /edge_detection (http://192.168.1.11:41383/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/Config:
+dynamic_reconfigure/BoolParameter[] bools
+  string name
+  bool value
+dynamic_reconfigure/IntParameter[] ints
+  string name
+  int32 value
+dynamic_reconfigure/StrParameter[] strs
+  string name
+  string value
+dynamic_reconfigure/DoubleParameter[] doubles
+  string name
+  float64 value
+dynamic_reconfigure/GroupState[] groups
+  string name
+  bool state
+  int32 id
+  int32 parent
+
+
+--- topic: /edge_detection/image/theora ---
+Type: theora_image_transport/Packet
+
+Publishers: 
+ * /edge_detection (http://192.168.1.11:41383/)
+
+Subscribers: None
+
+
+fields of theora_image_transport/Packet:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+uint8[] data
+int32 b_o_s
+int32 e_o_s
+int64 granulepos
+int64 packetno
+
+
+--- topic: /edge_detection/image/theora/parameter_descriptions ---
+Type: dynamic_reconfigure/ConfigDescription
+
+Publishers: 
+ * /edge_detection (http://192.168.1.11:41383/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/ConfigDescription:
+dynamic_reconfigure/Group[] groups
+  string name
+  string type
+  dynamic_reconfigure/ParamDescription[] parameters
+    string name
+    string type
+    uint32 level
+    string description
+    string edit_method
+  int32 parent
+  int32 id
+dynamic_reconfigure/Config max
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config min
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config dflt
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- topic: /edge_detection/image/theora/parameter_updates ---
+Type: dynamic_reconfigure/Config
+
+Publishers: 
+ * /edge_detection (http://192.168.1.11:41383/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/Config:
+dynamic_reconfigure/BoolParameter[] bools
+  string name
+  bool value
+dynamic_reconfigure/IntParameter[] ints
+  string name
+  int32 value
+dynamic_reconfigure/StrParameter[] strs
+  string name
+  string value
+dynamic_reconfigure/DoubleParameter[] doubles
+  string name
+  float64 value
+dynamic_reconfigure/GroupState[] groups
+  string name
+  bool state
+  int32 id
+  int32 parent
+
+
+--- topic: /edge_detection/parameter_descriptions ---
+Type: dynamic_reconfigure/ConfigDescription
+
+Publishers: 
+ * /edge_detection (http://192.168.1.11:41383/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/ConfigDescription:
+dynamic_reconfigure/Group[] groups
+  string name
+  string type
+  dynamic_reconfigure/ParamDescription[] parameters
+    string name
+    string type
+    uint32 level
+    string description
+    string edit_method
+  int32 parent
+  int32 id
+dynamic_reconfigure/Config max
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config min
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config dflt
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- topic: /edge_detection/parameter_updates ---
+Type: dynamic_reconfigure/Config
+
+Publishers: 
+ * /edge_detection (http://192.168.1.11:41383/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/Config:
+dynamic_reconfigure/BoolParameter[] bools
+  string name
+  bool value
+dynamic_reconfigure/IntParameter[] ints
+  string name
+  int32 value
+dynamic_reconfigure/StrParameter[] strs
+  string name
+  string value
+dynamic_reconfigure/DoubleParameter[] doubles
+  string name
+  float64 value
+dynamic_reconfigure/GroupState[] groups
+  string name
+  bool state
+  int32 id
+  int32 parent
+
+
+--- topic: /edition ---
+Type: transbot_msgs/Edition
+
+Publishers: 
+ * /transbot_node (http://192.168.1.11:34773/)
+
+Subscribers: 
+ * /BigTransbot (http://192.168.1.11:40475/)
+
+
+fields of transbot_msgs/Edition:
+float32 edition
+
+
+--- topic: /image ---
+Type: sensor_msgs/Image
+
+Publishers: 
+ * /msgToimg (http://192.168.1.11:39147/)
+
+Subscribers: None
+
+
+fields of sensor_msgs/Image:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+uint32 height
+uint32 width
+string encoding
+uint8 is_bigendian
+uint32 step
+uint8[] data
+
+
+--- topic: /image_msg ---
+Type: transbot_msgs/Image_Msg
+
+Publishers: 
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+ * /BigTransbot (http://192.168.1.11:40475/)
+
+Subscribers: 
+ * /msgToimg (http://192.168.1.11:39147/)
+
+
+fields of transbot_msgs/Image_Msg:
+int32 height
+int32 width
+int32 channels
+uint8[] data
+
+
+--- topic: /imu/data ---
+Type: sensor_msgs/Imu
+
+Publishers: 
+ * /imu_filter_madgwick (http://192.168.1.11:46789/)
+
+Subscribers: 
+ * /ekf_localization (http://192.168.1.11:36011/)
+
+
+fields of sensor_msgs/Imu:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+geometry_msgs/Quaternion orientation
+  float64 x
+  float64 y
+  float64 z
+  float64 w
+float64[9] orientation_covariance
+geometry_msgs/Vector3 angular_velocity
+  float64 x
+  float64 y
+  float64 z
+float64[9] angular_velocity_covariance
+geometry_msgs/Vector3 linear_acceleration
+  float64 x
+  float64 y
+  float64 z
+float64[9] linear_acceleration_covariance
+
+
+--- topic: /imu/data_raw ---
+Type: sensor_msgs/Imu
+
+Publishers: 
+ * /apply_calib (http://192.168.1.11:34513/)
+
+Subscribers: 
+ * /imu_filter_madgwick (http://192.168.1.11:46789/)
+
+
+fields of sensor_msgs/Imu:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+geometry_msgs/Quaternion orientation
+  float64 x
+  float64 y
+  float64 z
+  float64 w
+float64[9] orientation_covariance
+geometry_msgs/Vector3 angular_velocity
+  float64 x
+  float64 y
+  float64 z
+float64[9] angular_velocity_covariance
+geometry_msgs/Vector3 linear_acceleration
+  float64 x
+  float64 y
+  float64 z
+float64[9] linear_acceleration_covariance
+
+
+--- topic: /imu_filter_madgwick/parameter_descriptions ---
+Type: dynamic_reconfigure/ConfigDescription
+
+Publishers: 
+ * /imu_filter_madgwick (http://192.168.1.11:46789/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/ConfigDescription:
+dynamic_reconfigure/Group[] groups
+  string name
+  string type
+  dynamic_reconfigure/ParamDescription[] parameters
+    string name
+    string type
+    uint32 level
+    string description
+    string edit_method
+  int32 parent
+  int32 id
+dynamic_reconfigure/Config max
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config min
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config dflt
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- topic: /imu_filter_madgwick/parameter_updates ---
+Type: dynamic_reconfigure/Config
+
+Publishers: 
+ * /imu_filter_madgwick (http://192.168.1.11:46789/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/Config:
+dynamic_reconfigure/BoolParameter[] bools
+  string name
+  bool value
+dynamic_reconfigure/IntParameter[] ints
+  string name
+  int32 value
+dynamic_reconfigure/StrParameter[] strs
+  string name
+  string value
+dynamic_reconfigure/DoubleParameter[] doubles
+  string name
+  float64 value
+dynamic_reconfigure/GroupState[] groups
+  string name
+  bool state
+  int32 id
+  int32 parent
+
+
+--- topic: /joint_states ---
+Type: sensor_msgs/JointState
+
+Publishers: 
+ * /joint_state_publisher (http://192.168.1.11:38771/)
+
+Subscribers: 
+ * /robot_state_publisher (http://192.168.1.11:38341/)
+
+
+fields of sensor_msgs/JointState:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+string[] name
+float64[] position
+float64[] velocity
+float64[] effort
+
+
+--- topic: /joy ---
+Type: sensor_msgs/Joy
+
+Publishers: 
+ * /joy_node (http://192.168.1.11:40077/)
+
+Subscribers: 
+ * /transbot_joy (http://192.168.1.11:42803/)
+
+
+fields of sensor_msgs/Joy:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+float32[] axes
+int32[] buttons
+
+
+--- topic: /joy/set_feedback ---
+Type: sensor_msgs/JoyFeedbackArray
+
+Publishers: None
+
+Subscribers: 
+ * /joy_node (http://192.168.1.11:40077/)
+
+
+fields of sensor_msgs/JoyFeedbackArray:
+sensor_msgs/JoyFeedback[] array
+  uint8 TYPE_LED=0
+  uint8 TYPE_RUMBLE=1
+  uint8 TYPE_BUZZER=2
+  uint8 type
+  uint8 id
+  float32 intensity
+
+
+--- topic: /move_base/cancel ---
+Type: actionlib_msgs/GoalID
+
+Publishers: 
+ * /transbot_joy (http://192.168.1.11:42803/)
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+ * /BigTransbot (http://192.168.1.11:40475/)
+
+Subscribers: None
+
+
+fields of actionlib_msgs/GoalID:
+time stamp
+string id
+
+
+--- topic: /odom ---
+Type: nav_msgs/Odometry
+
+Publishers: 
+ * /ekf_localization (http://192.168.1.11:36011/)
+
+Subscribers: None
+
+
+fields of nav_msgs/Odometry:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+string child_frame_id
+geometry_msgs/PoseWithCovariance pose
+  geometry_msgs/Pose pose
+    geometry_msgs/Point position
+      float64 x
+      float64 y
+      float64 z
+    geometry_msgs/Quaternion orientation
+      float64 x
+      float64 y
+      float64 z
+      float64 w
+  float64[36] covariance
+geometry_msgs/TwistWithCovariance twist
+  geometry_msgs/Twist twist
+    geometry_msgs/Vector3 linear
+      float64 x
+      float64 y
+      float64 z
+    geometry_msgs/Vector3 angular
+      float64 x
+      float64 y
+      float64 z
+  float64[36] covariance
+
+
+--- topic: /odom_raw ---
+Type: nav_msgs/Odometry
+
+Publishers: 
+ * /base_node (http://192.168.1.11:37933/)
+
+Subscribers: 
+ * /ekf_localization (http://192.168.1.11:36011/)
+
+
+fields of nav_msgs/Odometry:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+string child_frame_id
+geometry_msgs/PoseWithCovariance pose
+  geometry_msgs/Pose pose
+    geometry_msgs/Point position
+      float64 x
+      float64 y
+      float64 z
+    geometry_msgs/Quaternion orientation
+      float64 x
+      float64 y
+      float64 z
+      float64 w
+  float64[36] covariance
+geometry_msgs/TwistWithCovariance twist
+  geometry_msgs/Twist twist
+    geometry_msgs/Vector3 linear
+      float64 x
+      float64 y
+      float64 z
+    geometry_msgs/Vector3 angular
+      float64 x
+      float64 y
+      float64 z
+  float64[36] covariance
+
+
+--- topic: /rosout ---
+Type: rosgraph_msgs/Log
+
+Publishers: 
+ * /apply_calib (http://192.168.1.11:34513/)
+ * /robot_state_publisher (http://192.168.1.11:38341/)
+ * /imu_filter_madgwick (http://192.168.1.11:46789/)
+ * /base_link_to_imu_link (http://192.168.1.11:38281/)
+ * /base_node (http://192.168.1.11:37933/)
+ * /joy_node (http://192.168.1.11:40077/)
+ * /ekf_localization (http://192.168.1.11:36011/)
+ * /edge_detection (http://192.168.1.11:41383/)
+ * /contour_moments (http://192.168.1.11:38255/)
+ * /BigTransbot (http://192.168.1.11:40475/)
+ * /joint_state_publisher (http://192.168.1.11:38771/)
+ * /transbot_joy (http://192.168.1.11:42803/)
+ * /web_video_server (http://192.168.1.11:35333/)
+ * /DeviceSrv (http://192.168.1.11:45723/)
+ * /msgToimg (http://192.168.1.11:39147/)
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+ * /transbot_node (http://192.168.1.11:34773/)
+
+Subscribers: 
+ * /rosout (http://192.168.1.11:32909/)
+
+
+fields of rosgraph_msgs/Log:
+byte DEBUG=1
+byte INFO=2
+byte WARN=4
+byte ERROR=8
+byte FATAL=16
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+byte level
+string name
+string msg
+string file
+string function
+uint32 line
+string[] topics
+
+
+--- topic: /rosout_agg ---
+Type: rosgraph_msgs/Log
+
+Publishers: 
+ * /rosout (http://192.168.1.11:32909/)
+
+Subscribers: None
+
+
+fields of rosgraph_msgs/Log:
+byte DEBUG=1
+byte INFO=2
+byte WARN=4
+byte ERROR=8
+byte FATAL=16
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+byte level
+string name
+string msg
+string file
+string function
+uint32 line
+string[] topics
+
+
+--- topic: /set_pose ---
+Type: geometry_msgs/PoseWithCovarianceStamped
+
+Publishers: None
+
+Subscribers: 
+ * /ekf_localization (http://192.168.1.11:36011/)
+
+
+fields of geometry_msgs/PoseWithCovarianceStamped:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+geometry_msgs/PoseWithCovariance pose
+  geometry_msgs/Pose pose
+    geometry_msgs/Point position
+      float64 x
+      float64 y
+      float64 z
+    geometry_msgs/Quaternion orientation
+      float64 x
+      float64 y
+      float64 z
+      float64 w
+  float64[36] covariance
+
+
+--- topic: /tf ---
+Type: tf2_msgs/TFMessage
+
+Publishers: 
+ * /imu_filter_madgwick (http://192.168.1.11:46789/)
+ * /robot_state_publisher (http://192.168.1.11:38341/)
+ * /base_link_to_imu_link (http://192.168.1.11:38281/)
+ * /base_node (http://192.168.1.11:37933/)
+ * /ekf_localization (http://192.168.1.11:36011/)
+
+Subscribers: 
+ * /ekf_localization (http://192.168.1.11:36011/)
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+
+
+fields of tf2_msgs/TFMessage:
+geometry_msgs/TransformStamped[] transforms
+  std_msgs/Header header
+    uint32 seq
+    time stamp
+    string frame_id
+  string child_frame_id
+  geometry_msgs/Transform transform
+    geometry_msgs/Vector3 translation
+      float64 x
+      float64 y
+      float64 z
+    geometry_msgs/Quaternion rotation
+      float64 x
+      float64 y
+      float64 z
+      float64 w
+
+
+--- topic: /tf_static ---
+Type: tf2_msgs/TFMessage
+
+Publishers: 
+ * /robot_state_publisher (http://192.168.1.11:38341/)
+
+Subscribers: 
+ * /ekf_localization (http://192.168.1.11:36011/)
+ * /TransbotPatrol (http://192.168.1.11:38015/)
+
+
+fields of tf2_msgs/TFMessage:
+geometry_msgs/TransformStamped[] transforms
+  std_msgs/Header header
+    uint32 seq
+    time stamp
+    string frame_id
+  string child_frame_id
+  geometry_msgs/Transform transform
+    geometry_msgs/Vector3 translation
+      float64 x
+      float64 y
+      float64 z
+    geometry_msgs/Quaternion rotation
+      float64 x
+      float64 y
+      float64 z
+      float64 w
+
+
+--- topic: /transbot/get_vel ---
+Type: geometry_msgs/Twist
+
+Publishers: 
+ * /transbot_node (http://192.168.1.11:34773/)
+
+Subscribers: 
+ * /base_node (http://192.168.1.11:37933/)
+
+
+fields of geometry_msgs/Twist:
+geometry_msgs/Vector3 linear
+  float64 x
+  float64 y
+  float64 z
+geometry_msgs/Vector3 angular
+  float64 x
+  float64 y
+  float64 z
+
+
+--- topic: /transbot/imu ---
+Type: sensor_msgs/Imu
+
+Publishers: 
+ * /transbot_node (http://192.168.1.11:34773/)
+
+Subscribers: 
+ * /apply_calib (http://192.168.1.11:34513/)
+
+
+fields of sensor_msgs/Imu:
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+geometry_msgs/Quaternion orientation
+  float64 x
+  float64 y
+  float64 z
+  float64 w
+float64[9] orientation_covariance
+geometry_msgs/Vector3 angular_velocity
+  float64 x
+  float64 y
+  float64 z
+float64[9] angular_velocity_covariance
+geometry_msgs/Vector3 linear_acceleration
+  float64 x
+  float64 y
+  float64 z
+float64[9] linear_acceleration_covariance
+
+
+--- topic: /transbot_node/parameter_descriptions ---
+Type: dynamic_reconfigure/ConfigDescription
+
+Publishers: 
+ * /transbot_node (http://192.168.1.11:34773/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/ConfigDescription:
+dynamic_reconfigure/Group[] groups
+  string name
+  string type
+  dynamic_reconfigure/ParamDescription[] parameters
+    string name
+    string type
+    uint32 level
+    string description
+    string edit_method
+  int32 parent
+  int32 id
+dynamic_reconfigure/Config max
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config min
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+dynamic_reconfigure/Config dflt
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- topic: /transbot_node/parameter_updates ---
+Type: dynamic_reconfigure/Config
+
+Publishers: 
+ * /transbot_node (http://192.168.1.11:34773/)
+
+Subscribers: None
+
+
+fields of dynamic_reconfigure/Config:
+dynamic_reconfigure/BoolParameter[] bools
+  string name
+  bool value
+dynamic_reconfigure/IntParameter[] ints
+  string name
+  int32 value
+dynamic_reconfigure/StrParameter[] strs
+  string name
+  string value
+dynamic_reconfigure/DoubleParameter[] doubles
+  string name
+  float64 value
+dynamic_reconfigure/GroupState[] groups
+  string name
+  bool state
+  int32 id
+  int32 parent
+
+
+--- topic: /voltage ---
+Type: transbot_msgs/Battery
+
+Publishers: 
+ * /transbot_node (http://192.168.1.11:34773/)
+
+Subscribers: 
+ * /BigTransbot (http://192.168.1.11:40475/)
+
+
+fields of transbot_msgs/Battery:
+float32 Voltage
+
+
 === SERVICE LIST ===
-ERROR: Unable to communicate with master!
+/BigTransbot/get_loggers
+/BigTransbot/set_logger_level
+/Buzzer
+/CamDevice
+/CurrentAngle
+/DeviceSrv/get_loggers
+/DeviceSrv/set_logger_level
+/Headlight
+/Patrol
+/RGBLight
+/TransbotPatrol/get_loggers
+/TransbotPatrol/set_logger_level
+/TransbotPatrol/set_parameters
+/apply_calib/get_loggers
+/apply_calib/set_logger_level
+/base_link_to_imu_link/get_loggers
+/base_link_to_imu_link/set_logger_level
+/base_node/get_loggers
+/base_node/set_logger_level
+/contour_moments/get_loggers
+/contour_moments/image/compressed/set_parameters
+/contour_moments/image/compressedDepth/set_parameters
+/contour_moments/image/theora/set_parameters
+/contour_moments/list
+/contour_moments/load_nodelet
+/contour_moments/set_logger_level
+/contour_moments/set_parameters
+/contour_moments/unload_nodelet
+/edge_detection/get_loggers
+/edge_detection/image/compressed/set_parameters
+/edge_detection/image/compressedDepth/set_parameters
+/edge_detection/image/theora/set_parameters
+/edge_detection/list
+/edge_detection/load_nodelet
+/edge_detection/set_logger_level
+/edge_detection/set_parameters
+/edge_detection/unload_nodelet
+/ekf_localization/enable
+/ekf_localization/get_loggers
+/ekf_localization/set_logger_level
+/imu_filter_madgwick/get_loggers
+/imu_filter_madgwick/set_logger_level
+/imu_filter_madgwick/set_parameters
+/joint_state_publisher/get_loggers
+/joint_state_publisher/set_logger_level
+/joy_node/get_loggers
+/joy_node/set_logger_level
+/msgToimg/get_loggers
+/msgToimg/set_logger_level
+/robot_state_publisher/get_loggers
+/robot_state_publisher/set_logger_level
+/rosout/get_loggers
+/rosout/set_logger_level
+/set_pose
+/transbot_joy/get_loggers
+/transbot_joy/set_logger_level
+/transbot_node/get_loggers
+/transbot_node/set_logger_level
+/transbot_node/set_parameters
+/web_video_server/get_loggers
+/web_video_server/set_logger_level
 
 === SERVICE TYPES + DEFINITIONS ===
 
+--- service: /BigTransbot/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /BigTransbot/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /Buzzer ---
+Type: transbot_msgs/Buzzer
+int32 buzzer
+---
+bool result
+
+
+--- service: /CamDevice ---
+Type: transbot_msgs/CamDevice
+string GetGev
+---
+string camDevice
+
+
+--- service: /CurrentAngle ---
+Type: transbot_msgs/RobotArm
+string apply
+---
+transbot_msgs/Arm RobotArm
+  transbot_msgs/Joint[] joint
+    int32 id
+    int32 run_time
+    float32 angle
+
+
+--- service: /DeviceSrv/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /DeviceSrv/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /Headlight ---
+Type: transbot_msgs/Headlight
+int32 Headlight
+---
+bool result
+
+
+--- service: /Patrol ---
+Type: transbot_msgs/Patrol
+string Commond
+float32 LineScaling
+float32 RotationScaling
+---
+bool result
+
+
+--- service: /RGBLight ---
+Type: transbot_msgs/RGBLight
+int32 effect
+int32 speed
+---
+bool result
+
+
+--- service: /TransbotPatrol/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /TransbotPatrol/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /TransbotPatrol/set_parameters ---
+Type: dynamic_reconfigure/Reconfigure
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+---
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- service: /apply_calib/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /apply_calib/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /base_link_to_imu_link/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /base_link_to_imu_link/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /base_node/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /base_node/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /contour_moments/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /contour_moments/image/compressed/set_parameters ---
+Type: dynamic_reconfigure/Reconfigure
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+---
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- service: /contour_moments/image/compressedDepth/set_parameters ---
+Type: dynamic_reconfigure/Reconfigure
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+---
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- service: /contour_moments/image/theora/set_parameters ---
+Type: dynamic_reconfigure/Reconfigure
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+---
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- service: /contour_moments/list ---
+Type: nodelet/NodeletList
+---
+string[] nodelets
+
+
+--- service: /contour_moments/load_nodelet ---
+Type: nodelet/NodeletLoad
+string name
+string type
+string[] remap_source_args
+string[] remap_target_args
+string[] my_argv
+string bond_id
+---
+bool success
+
+
+--- service: /contour_moments/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /contour_moments/set_parameters ---
+Type: dynamic_reconfigure/Reconfigure
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+---
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- service: /contour_moments/unload_nodelet ---
+Type: nodelet/NodeletUnload
+string name
+---
+bool success
+
+
+--- service: /edge_detection/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /edge_detection/image/compressed/set_parameters ---
+Type: dynamic_reconfigure/Reconfigure
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+---
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- service: /edge_detection/image/compressedDepth/set_parameters ---
+Type: dynamic_reconfigure/Reconfigure
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+---
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- service: /edge_detection/image/theora/set_parameters ---
+Type: dynamic_reconfigure/Reconfigure
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+---
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- service: /edge_detection/list ---
+Type: nodelet/NodeletList
+---
+string[] nodelets
+
+
+--- service: /edge_detection/load_nodelet ---
+Type: nodelet/NodeletLoad
+string name
+string type
+string[] remap_source_args
+string[] remap_target_args
+string[] my_argv
+string bond_id
+---
+bool success
+
+
+--- service: /edge_detection/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /edge_detection/set_parameters ---
+Type: dynamic_reconfigure/Reconfigure
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+---
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- service: /edge_detection/unload_nodelet ---
+Type: nodelet/NodeletUnload
+string name
+---
+bool success
+
+
+--- service: /ekf_localization/enable ---
+Type: std_srvs/Empty
+---
+
+
+--- service: /ekf_localization/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /ekf_localization/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /imu_filter_madgwick/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /imu_filter_madgwick/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /imu_filter_madgwick/set_parameters ---
+Type: dynamic_reconfigure/Reconfigure
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+---
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- service: /joint_state_publisher/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /joint_state_publisher/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /joy_node/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /joy_node/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /msgToimg/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /msgToimg/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /robot_state_publisher/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /robot_state_publisher/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /rosout/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /rosout/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /set_pose ---
+Type: robot_localization/SetPose
+geometry_msgs/PoseWithCovarianceStamped pose
+  std_msgs/Header header
+    uint32 seq
+    time stamp
+    string frame_id
+  geometry_msgs/PoseWithCovariance pose
+    geometry_msgs/Pose pose
+      geometry_msgs/Point position
+        float64 x
+        float64 y
+        float64 z
+      geometry_msgs/Quaternion orientation
+        float64 x
+        float64 y
+        float64 z
+        float64 w
+    float64[36] covariance
+---
+
+
+--- service: /transbot_joy/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /transbot_joy/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /transbot_node/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /transbot_node/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
+--- service: /transbot_node/set_parameters ---
+Type: dynamic_reconfigure/Reconfigure
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+---
+dynamic_reconfigure/Config config
+  dynamic_reconfigure/BoolParameter[] bools
+    string name
+    bool value
+  dynamic_reconfigure/IntParameter[] ints
+    string name
+    int32 value
+  dynamic_reconfigure/StrParameter[] strs
+    string name
+    string value
+  dynamic_reconfigure/DoubleParameter[] doubles
+    string name
+    float64 value
+  dynamic_reconfigure/GroupState[] groups
+    string name
+    bool state
+    int32 id
+    int32 parent
+
+
+--- service: /web_video_server/get_loggers ---
+Type: roscpp/GetLoggers
+---
+roscpp/Logger[] loggers
+  string name
+  string level
+
+
+--- service: /web_video_server/set_logger_level ---
+Type: roscpp/SetLoggerLevel
+string logger
+string level
+---
+
+
 === TOPIC SAMPLES (one message each, 5s timeout, telemetry only) ===
 
+--- sample: /cmd_vel ---
+
+--- sample: /edition ---
+edition: 3.29999995232
+---
+
+--- sample: /imu/data ---
+header: 
+  seq: 19297
+  stamp: 
+    secs: 1629988757
+    nsecs: 789786215
+  frame_id: "imu_link"
+orientation: 
+  x: -0.0933447053327
+  y: -0.0258755269086
+  z: 0.40318057803
+  w: -0.90997947482
+orientation_covariance: [0.0025000000000000005, 0.0, 0.0, 0.0, 0.0025000000000000005, 0.0, 0.0, 0.0, 0.0025000000000000005]
+angular_velocity: 
+  x: 0.0021396936877
+  y: 0.00155347623902
+  z: -0.00494980696672
+angular_velocity_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+linear_acceleration: 
+  x: -0.317455909802
+  y: 0.390253683307
+  z: 2.61006634448
+linear_acceleration_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+---
+
+--- sample: /imu/data_raw ---
+header: 
+  seq: 19347
+  stamp: 
+    secs: 1629988760
+    nsecs: 366538447
+  frame_id: "imu_link"
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 0.0
+orientation_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+angular_velocity: 
+  x: 0.000274456350975
+  y: 0.00208640119237
+  z: -0.00484961707549
+angular_velocity_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+linear_acceleration: 
+  x: -0.387741022251
+  y: 0.483541555134
+  z: 2.703718965
+linear_acceleration_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+---
+
+--- sample: /imu_filter_madgwick/parameter_descriptions ---
+groups: 
+  - 
+    name: "Default"
+    type: ''
+    parameters: 
+      - 
+        name: "gain"
+        type: "double"
+        level: 0
+        description: "Gain of the filter. Higher values lead to faster convergence but more noise. Lower\
+  \ values lead to slower convergence but smoother signal."
+        edit_method: ''
+      - 
+        name: "zeta"
+        type: "double"
+        level: 0
+        description: "Gyro drift gain (approx. rad/s)."
+        edit_method: ''
+      - 
+        name: "mag_bias_x"
+        type: "double"
+        level: 0
+        description: "Magnetometer bias (hard iron correction), x component."
+        edit_method: ''
+      - 
+        name: "mag_bias_y"
+        type: "double"
+        level: 0
+        description: "Magnetometer bias (hard iron correction), y component."
+        edit_method: ''
+      - 
+        name: "mag_bias_z"
+        type: "double"
+        level: 0
+        description: "Magnetometer bias (hard iron correction), z component."
+        edit_method: ''
+      - 
+        name: "orientation_stddev"
+        type: "double"
+        level: 0
+        description: "Standard deviation of the orientation estimate."
+        edit_method: ''
+    parent: 0
+    id: 0
+max: 
+  bools: []
+  ints: []
+  strs: []
+  doubles: 
+    - 
+      name: "gain"
+      value: 1.0
+    - 
+      name: "zeta"
+      value: 1.0
+    - 
+      name: "mag_bias_x"
+      value: 10.0
+    - 
+      name: "mag_bias_y"
+      value: 10.0
+    - 
+      name: "mag_bias_z"
+      value: 10.0
+    - 
+      name: "orientation_stddev"
+      value: 1.0
+  groups: 
+    - 
+      name: "Default"
+      state: True
+      id: 0
+      parent: 0
+min: 
+  bools: []
+  ints: []
+  strs: []
+  doubles: 
+    - 
+      name: "gain"
+      value: 0.0
+    - 
+      name: "zeta"
+      value: -1.0
+    - 
+      name: "mag_bias_x"
+      value: -10.0
+    - 
+      name: "mag_bias_y"
+      value: -10.0
+    - 
+      name: "mag_bias_z"
+      value: -10.0
+    - 
+      name: "orientation_stddev"
+      value: 0.0
+  groups: 
+    - 
+      name: "Default"
+      state: True
+      id: 0
+      parent: 0
+dflt: 
+  bools: []
+  ints: []
+  strs: []
+  doubles: 
+    - 
+      name: "gain"
+      value: 0.1
+    - 
+      name: "zeta"
+      value: 0.0
+    - 
+      name: "mag_bias_x"
+      value: 0.0
+    - 
+      name: "mag_bias_y"
+      value: 0.0
+    - 
+      name: "mag_bias_z"
+      value: 0.0
+    - 
+      name: "orientation_stddev"
+      value: 0.0
+  groups: 
+    - 
+      name: "Default"
+      state: True
+      id: 0
+      parent: 0
+---
+
+--- sample: /imu_filter_madgwick/parameter_updates ---
+bools: []
+ints: []
+strs: []
+doubles: 
+  - 
+    name: "gain"
+    value: 0.1
+  - 
+    name: "zeta"
+    value: 0.0
+  - 
+    name: "mag_bias_x"
+    value: 0.0
+  - 
+    name: "mag_bias_y"
+    value: 0.0
+  - 
+    name: "mag_bias_z"
+    value: 0.0
+  - 
+    name: "orientation_stddev"
+    value: 0.05
+groups: 
+  - 
+    name: "Default"
+    state: True
+    id: 0
+    parent: 0
+---
+
+--- sample: /odom ---
+header: 
+  seq: 20115
+  stamp: 
+    secs: 1629988768
+    nsecs: 655386448
+  frame_id: "odom"
+child_frame_id: "dummy"
+pose: 
+  pose: 
+    position: 
+      x: 0.0
+      y: 0.0
+      z: 0.0
+    orientation: 
+      x: 0.0
+      y: 0.0
+      z: -0.999498269484
+      w: 0.0316734794073
+  covariance: [50.810214066178936, -7.946386402435565e-21, 0.0, 0.0, 0.0, 0.0, 2.0912128389368783e-20, 50.810214066178936, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.713426440474804e-07, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.5108975205845967e-07, -4.5252678767241584e-32, 0.0, 0.0, 0.0, 0.0, 5.768160183439771e-32, 4.5108975205845967e-07, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 60.94509343053161]
+twist: 
+  twist: 
+    linear: 
+      x: 0.0
+      y: 0.0
+      z: 0.0
+    angular: 
+      x: 0.0
+      y: 0.0
+      z: -0.00610085316005
+  covariance: [9.656186505820058e-05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 9.656186505820058e-05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.604153317134836e-07, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.074794835659415e-07, -4.464756053590518e-34, 0.0, 0.0, 0.0, 0.0, 5.106344632245336e-34, 4.074794835659415e-07, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 9.999855325941978e-10]
+---
+
+--- sample: /odom_raw ---
+header: 
+  seq: 19658
+  stamp: 
+    secs: 1629988771
+    nsecs: 301711123
+  frame_id: "odom"
+child_frame_id: "dummy"
+pose: 
+  pose: 
+    position: 
+      x: 0.0
+      y: 0.0
+      z: 0.0
+    orientation: 
+      x: 0.0
+      y: 0.0
+      z: 0.0
+      w: 1.0
+  covariance: [0.001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.001]
+twist: 
+  twist: 
+    linear: 
+      x: 0.0
+      y: 0.0
+      z: 0.0
+    angular: 
+      x: 0.0
+      y: 0.0
+      z: 0.0
+  covariance: [0.0001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0001]
+---
+
+--- sample: /transbot/get_vel ---
+linear: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+angular: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+---
+
+--- sample: /transbot/imu ---
+header: 
+  seq: 19776
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+orientation: 
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 0.0
+orientation_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+angular_velocity: 
+  x: 0.000799387430025
+  y: -0.000266462476675
+  z: -0.000266462476675
+angular_velocity_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+linear_acceleration: 
+  x: 0.00732421875
+  y: -0.0126953125
+  z: 1.00134277344
+linear_acceleration_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+---
+
+--- sample: /voltage ---
+Voltage: 11.6000003815
+---
+
 === CAMERA TOPIC CANDIDATES ===
+/contour_moments/image
+/contour_moments/image/compressed
+/contour_moments/image/compressed/parameter_descriptions
+/contour_moments/image/compressed/parameter_updates
+/contour_moments/image/compressedDepth
+/contour_moments/image/compressedDepth/parameter_descriptions
+/contour_moments/image/compressedDepth/parameter_updates
+/contour_moments/image/theora
+/contour_moments/image/theora/parameter_descriptions
+/contour_moments/image/theora/parameter_updates
+/edge_detection/image
+/edge_detection/image/compressed
+/edge_detection/image/compressed/parameter_descriptions
+/edge_detection/image/compressed/parameter_updates
+/edge_detection/image/compressedDepth
+/edge_detection/image/compressedDepth/parameter_descriptions
+/edge_detection/image/compressedDepth/parameter_updates
+/edge_detection/image/theora
+/edge_detection/image/theora/parameter_descriptions
+/edge_detection/image/theora/parameter_updates
+/image
+/image_msg
 
 === REQUIRED PACKAGES INSTALLED? ===
 dpkg-query: no packages found matching ros-melodic-rosbridge-suite
@@ -83,8 +3507,49 @@ cat: /etc/rc.local: No such file or directory
 --- crontab ---
 no crontab for jetson
 --- running ros-related processes ---
-avahi     4324  0.0  0.0   6168  3132 ?        Ss   22:20   0:00 avahi-daemon: running [Transbot.local]
-jetson    6837  0.0  0.0   1912   464 ?        Ss   22:21   0:00 /bin/sh -c python3 /home/jetson/Transbot/transbot/oled_transbot.py
-jetson    6873 12.0  0.4  35088 19728 ?        D    22:21   0:44 python3 /home/jetson/Transbot/transbot/oled_transbot.py
+avahi     3977  0.0  0.0   6172  3144 ?        Ss   22:20   0:00 avahi-daemon: running [Transbot.local]
+jetson    6645  0.0  0.0   1912   464 ?        Ss   22:21   0:00 /bin/sh -c python3 /home/jetson/Transbot/transbot/oled_transbot.py
+jetson    6697  8.9  0.5  35692 20304 ?        R    22:21   1:40 python3 /home/jetson/Transbot/transbot/oled_transbot.py
+jetson    8569  5.1  2.5 1377608 104956 pts/0  Sl+  22:21   0:55 python3 /home/jetson/Transbot/transbot/transbot_main.pyc
+jetson    9169  0.0  0.0   2276   584 pts/0    S+   22:22   0:00 sh -c roslaunch transbot_program Transbot_Program.launch
+jetson    9176  0.7  1.5 322752 63480 pts/0    Sl+  22:22   0:08 /usr/bin/python /opt/ros/melodic/bin/roslaunch transbot_program Transbot_Program.launch
+jetson    9500  0.7  1.5 631340 63184 ?        Ssl  22:22   0:07 /usr/bin/python /opt/ros/melodic/bin/rosmaster --core -p 11311 -w 3 __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/master.log
+jetson    9594  0.6  0.2 338680  9804 ?        Ssl  22:22   0:06 /opt/ros/melodic/lib/rosout/rosout __name:=rosout __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/rosout-1.log
+jetson    9616  0.2  1.0 466776 44020 ?        Ssl  22:22   0:03 python3 /home/jetson/transbot_ws/src/transbot_bringup/scripts/DeviceSrv.py __name:=DeviceSrv __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/DeviceSrv-2.log
+jetson    9626  4.8  2.0 1271016 82540 ?       Ssl  22:22   0:50 python /home/jetson/transbot_ws/src/transbot_bringup/scripts/transbot_driver.py __name:=transbot_node __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/transbot_node-3.log
+jetson    9627  1.4  1.4 540308 59820 ?        Ssl  22:22   0:15 python2 /opt/ros/melodic/lib/joint_state_publisher/joint_state_publisher __name:=joint_state_publisher __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/joint_state_publisher-4.log
+jetson    9636  0.6  0.3 357576 14824 ?        Ssl  22:22   0:06 /opt/ros/melodic/lib/robot_state_publisher/robot_state_publisher __name:=robot_state_publisher __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/robot_state_publisher-5.log
+jetson    9646  1.1  0.2 341300 11032 ?        Ssl  22:22   0:11 /home/jetson/software/transbot_library/devel/lib/imu_calib/apply_calib __name:=apply_calib __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/apply_calib-6.log
+jetson    9656  1.1  0.3 415936 12316 ?        Ssl  22:22   0:11 /home/jetson/software/transbot_library/devel/lib/imu_filter_madgwick/imu_filter_node __name:=imu_filter_madgwick __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/imu_filter_madgwick-7.log
+jetson    9662  0.3  0.2 274480  8960 ?        Ssl  22:22   0:04 /opt/ros/melodic/lib/tf/static_transform_publisher 0.0 0 0.02 0 0 0 /base_link /imu_link 100 __name:=base_link_to_imu_link __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/base_link_to_imu_link-8.log
+jetson    9698  1.3  0.2 340228 11080 ?        Ssl  22:22   0:14 /home/jetson/transbot_ws/devel/lib/transbot_bringup/base_node __name:=base_node __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/base_node-9.log
+jetson    9721 18.1  0.3 419304 15408 ?        Ssl  22:22   3:10 /home/jetson/software/transbot_library/devel/lib/robot_localization/ekf_localization_node odometry/filtered:=odom __name:=ekf_localization __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/ekf_localization-10.log
+jetson    9752  0.1  0.2 338620  8244 ?        Ssl  22:22   0:01 /opt/ros/melodic/lib/joy/joy_node __name:=joy_node __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/joy_node-11.log
+jetson    9765  0.8  1.5 982416 63636 ?        Ssl  22:22   0:08 python /home/jetson/transbot_ws/src/transbot_ctrl/scripts/transbot_joy.py __name:=transbot_joy __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/transbot_joy-12.log
+jetson    9792  0.4  3.1 834964 127964 ?       Ssl  22:22   0:04 python /home/jetson/transbot_ws/src/transbot_visual/scripts/msgToimg.py __name:=msgToimg __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/msgToimg-13.log
+jetson    9833  0.2  1.9 819052 79132 ?        Ssl  22:22   0:03 /home/jetson/software/transbot_library/devel/lib/opencv_apps/edge_detection image:=image __name:=edge_detection __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/edge_detection-14.log
+jetson    9874  0.2  1.9 819052 79408 ?        Ssl  22:22   0:03 /home/jetson/software/transbot_library/devel/lib/opencv_apps/contour_moments image:=image __name:=contour_moments __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/contour_moments-15.log
+jetson    9900  4.0  2.1 1303032 85584 ?       Ssl  22:22   0:42 python2 /home/jetson/transbot_ws/src/transbot_program/scripts/transbot_patrol.py __name:=TransbotPatrol __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/TransbotPatrol-16.log
+jetson    9914  0.3  1.7 755224 70172 ?        Ssl  22:22   0:03 /opt/ros/melodic/lib/web_video_server/web_video_server __name:=web_video_server __log:=/home/jetson/.ros/log/ffdce24c-0678-11ec-b1db-dc4a9ee06612/web_video_server-17.log
+--- start_transbot.sh (what the factory autostart launches) ---
+#! /bin/bash
+
+###############################################################################
+# 1.add Additional startup programs
+# start_transbot
+# bash /home/jetson/Transbot/transbot/start_transbot.sh
+# start transbot main program
+###############################################################################
+
+
+###############################################################################
+# 2.add to .bashrc last line
+# eval "$RUN_TRANSBOT_PROGRAMS"
+###############################################################################
+
+gnome-terminal -- bash -c "cd /home/jetson/Transbot/transbot;sleep 3;export RUN_TRANSBOT_PROGRAMS='python3 /home/jetson/Transbot/transbot/transbot_main.pyc';exec bash"
+
+wait
+exit 0
 
 === DONE ===

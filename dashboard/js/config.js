@@ -3,8 +3,8 @@
 // Every topic name, message type, key binding, limit, range, and URL lives
 // here. No other module may hard-code any of these values.
 //
-// Items marked TO-VERIFY are vendor-doc hints that MUST be confirmed against
-// FINDINGS.md (Phase 1 live discovery on the robot) before first real use.
+// Topic names, types, and field layouts were VERIFIED against the live robot
+// on 2026-06-09 — see FINDINGS.md. Remaining TO-VERIFY items are noted inline.
 // ============================================================================
 
 // ---- Network profiles ------------------------------------------------------
@@ -19,16 +19,14 @@ export const PROFILES = {
     label: 'HOME WIFI',
     // TO-VERIFY: robot's DHCP address once it joins the home network.
     rosbridgeUrl: 'ws://192.168.1.50:9090',
-    // TO-VERIFY: camera topic name comes from Phase 1 discovery.
-    videoUrl: 'http://192.168.1.50:8080/stream?topic=/usb_cam/image_raw&type=mjpeg',
+    videoUrl: 'http://192.168.1.50:8080/stream?topic=/image&type=mjpeg',
   },
   hotspot: {
     label: 'ROBOT HOTSPOT',
     // Verified: robot is the gateway at 192.168.1.11 on its own "Transbot"
-    // AP (WPA2, SSID "Transbot"). Note: same 192.168.1.x subnet as many home
-    // networks — the laptop can only be on one of the two at a time anyway.
+    // AP (WPA2, SSID "Transbot"). Camera topic /image per FINDINGS.md.
     rosbridgeUrl: 'ws://192.168.1.11:9090',
-    videoUrl: 'http://192.168.1.11:8080/stream?topic=/usb_cam/image_raw&type=mjpeg',
+    videoUrl: 'http://192.168.1.11:8080/stream?topic=/image&type=mjpeg',
   },
 };
 
@@ -37,27 +35,27 @@ export const DEFAULT_PROFILE = 'mock';
 // ---- Topics and services ---------------------------------------------------
 // `verified: false` => type/name is a hint, not discovery-confirmed.
 export const TOPICS = {
-  // Drive. geometry_msgs/Twist is a ROS standard and locked by the brief.
+  // Drive. Subscribed by /transbot_node (the driver).
   cmdVel: { name: '/cmd_vel', type: 'geometry_msgs/Twist', verified: true },
 
-  // Camera gimbal (2 PWM servos). Custom Yahboom message.
-  // TO-VERIFY: package name, type string, and field names.
-  pwmServo: { name: '/PWMServo', type: 'transbot_msgs/PWMServo', verified: false },
+  // Camera gimbal: {int32 id, int32 angle}, id 1 = pan, 2 = tilt.
+  pwmServo: { name: '/PWMServo', type: 'transbot_msgs/PWMServo', verified: true },
 
-  // 3-DOF arm (bus servos 7/8/9). Custom Yahboom message.
-  // TO-VERIFY: package name, type string, and field names.
-  targetAngle: { name: '/TargetAngle', type: 'transbot_msgs/Arm', verified: false },
+  // 3-DOF arm: {Joint[] joint}, Joint = {int32 id, int32 run_time, float32 angle}.
+  targetAngle: { name: '/TargetAngle', type: 'transbot_msgs/Arm', verified: true },
 
-  // Telemetry the driver publishes.
-  getVel: { name: '/transbot/get_vel', type: 'geometry_msgs/Twist', verified: false }, // TO-VERIFY type
-  imu: { name: '/transbot/imu', type: 'sensor_msgs/Imu', verified: false },            // TO-VERIFY type
-  battery: { name: '/voltage', type: 'std_msgs/Float32', verified: false },            // TO-VERIFY name+type
+  // Telemetry.
+  getVel: { name: '/transbot/get_vel', type: 'geometry_msgs/Twist', verified: true },
+  // Filtered IMU (madgwick) — real orientation. Raw alternative: /transbot/imu.
+  imu: { name: '/imu/data', type: 'sensor_msgs/Imu', verified: true },
+  // Single field: float32 Voltage (capital V).
+  battery: { name: '/voltage', type: 'transbot_msgs/Battery', verified: true },
 };
 
 export const SERVICES = {
-  // Reads current arm joint angles.
-  // TO-VERIFY: service type and response field layout.
-  currentAngle: { name: '/CurrentAngle', type: 'transbot_msgs/RobotArm', verified: false },
+  // Reads current arm joint angles. Request: {apply: string}.
+  // Response: {RobotArm: {joint: [{id, run_time, angle}]}}.
+  currentAngle: { name: '/CurrentAngle', type: 'transbot_msgs/RobotArm', verified: true },
 
   // Standard rosapi service (ships with rosbridge_server) — used to measure
   // round-trip latency over the WebSocket.

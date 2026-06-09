@@ -17,9 +17,11 @@ export const PROFILES = {
   },
   home: {
     label: 'HOME WIFI',
-    // TO-VERIFY: robot's DHCP address once it joins the home network.
-    rosbridgeUrl: 'ws://192.168.1.50:9090',
-    videoUrl: 'http://192.168.1.50:8080/stream?topic=/image&type=mjpeg',
+    // Verified 2026-06-09: robot's DHCP address on TP-Link_8A2B_5G. If DHCP
+    // ever reassigns it, the OLED shows the current IP (consider a router
+    // DHCP reservation for the robot's MAC to pin it).
+    rosbridgeUrl: 'ws://192.168.0.109:9090',
+    videoUrl: 'http://192.168.0.109:8080/stream?topic=/image&type=mjpeg',
   },
   hotspot: {
     label: 'ROBOT HOTSPOT',

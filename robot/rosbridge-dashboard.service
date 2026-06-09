@@ -1,0 +1,15 @@
+[Unit]
+Description=rosbridge WebSocket server for the Transbot dashboard (:9090)
+After=network.target
+
+[Service]
+Type=simple
+User=jetson
+ExecStart=/bin/bash /home/jetson/transbot_dashboard/start_dashboard.sh
+# The factory ROS stack takes ~2 minutes after boot; keep retrying until
+# the environment is ready rather than failing once and giving up.
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

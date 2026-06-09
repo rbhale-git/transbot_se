@@ -70,8 +70,11 @@ code changes. The robot-side launch is identical on both networks.
 - [x] Phase 1 — interface discovery complete, see `FINDINGS.md`; all message
       shapes verified and config updated (camera topic `/image`, battery
       `/voltage` `{Voltage}`, IMU `/imu/data`)
-- [ ] Phase 2 — install rosbridge-suite on the robot (the ONLY missing piece:
-      driver and web_video_server already autostart with the factory stack)
+- [x] Phase 2 — rosbridge-suite installed; `rosbridge-dashboard.service`
+      (systemd, enabled) starts the bridge at boot, so the robot is fully
+      dashboard-ready on power-on. Verified live from the laptop: telemetry,
+      services, and the `/image` MJPEG stream all answer on
+      ws://192.168.0.109:9090 / :8080 (home Wi-Fi profile)
 - [x] Phase 3 — dashboard built and tested against the mock (which mirrors
       the verified interface)
 - [ ] Phase 4 — test and safety pass on the real robot

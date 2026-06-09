@@ -30,11 +30,46 @@ code changes. The robot-side launch is identical on both networks.
 
 ## Status
 
-- [x] Phase 0 — repo and SSH setup
+- [x] Phase 0 (partial) — repo created; SSH setup pending robot availability
 - [ ] Phase 1 — interface discovery on the robot (`FINDINGS.md`)
 - [ ] Phase 2 — robot-side setup (rosbridge + web_video_server + launch file)
-- [ ] Phase 3 — web dashboard
-- [ ] Phase 4 — test and safety pass
+- [x] Phase 3 (against mock) — dashboard built and tested against a local mock
+      rosbridge; custom message types marked TO-VERIFY until Phase 1
+- [ ] Phase 4 — test and safety pass on the real robot
 - [ ] Phase 5 — docs
+
+## Running the dashboard (mock mode, no robot needed)
+
+Two terminals from the repo root:
+
+```powershell
+# 1. mock rosbridge server (simulated driver telemetry on ws://localhost:9090)
+python mock/mock_rosbridge.py
+
+# 2. static server for the dashboard
+python -m http.server 8000 --directory dashboard
+```
+
+Open http://localhost:8000 and make sure the NET profile is `MOCK (local sim)`.
+The mock logs every command the dashboard sends, simulates measured velocity
+(echoing `/cmd_vel`, decaying to zero when commands stop), IMU noise, a
+draining battery (to exercise the low-voltage warning), and a `/CurrentAngle`
+service that follows `/TargetAngle` commands.
+
+Protocol self-test for the mock: `python mock/selftest.py` (mock must be running).
+
+### Key bindings (v1, also shown in the dashboard footer)
+
+| Keys | Action |
+| --- | --- |
+| W / S (hold) | drive forward / back |
+| A / D (hold) | rotate left / right (combinable with W/S) |
+| SPACE | e-stop — immediate zero Twist, highest priority |
+| Arrow keys | gimbal pan/tilt step, C recenter |
+| U/J, I/K, O/L | arm joints 7 / 8 / 9 step |
+| G | gripper toggle, H = arm home pose |
+
+Deadman behavior: motion stops on key release, on tab blur or page hide, and
+on rosbridge disconnect.
 
 See `transbot_dashboard_build_prompt.md` for the full build brief.

@@ -1,0 +1,325 @@
+/* ===========================================================================
+   TRANSBOT SE // GROUND CONTROL — dark instrument-panel aesthetic.
+   Phosphor green on near-black, amber for warnings, red for faults.
+   Cascadia Mono ships with Windows 11; everything works fully offline.
+   =========================================================================== */
+
+:root {
+  --bg: #07090c;
+  --bg-panel: #0c1014;
+  --bg-inset: #04060a;
+  --line: #1c2730;
+  --line-bright: #2c3c48;
+  --ink: #b8c7d1;
+  --ink-dim: #5d6f7c;
+  --green: #3df58c;
+  --green-dim: #1d7a48;
+  --amber: #ffb454;
+  --red: #ff4f58;
+  --cyan: #53d6ff;
+  --font: "Cascadia Mono", "Consolas", "Courier New", monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  /* faint grid: a real control surface, not a flat void */
+  background-image:
+    linear-gradient(rgba(60, 90, 110, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(60, 90, 110, 0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.hidden { display: none !important; }
+.dim { color: var(--ink-dim); }
+.small { font-size: 10px; }
+
+/* ---- Header --------------------------------------------------------------- */
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-panel);
+}
+
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { color: var(--green); font-size: 14px; }
+h1 { font-size: 15px; letter-spacing: 2px; font-weight: 600; color: #e6eef3; }
+h1 .dim { font-weight: 400; letter-spacing: 1px; }
+
+.header-right { display: flex; align-items: center; gap: 18px; }
+
+.profile { color: var(--ink-dim); letter-spacing: 1px; font-size: 11px; }
+.profile select {
+  background: var(--bg-inset);
+  color: var(--green);
+  border: 1px solid var(--line-bright);
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 4px 6px;
+  margin-left: 6px;
+}
+
+#rosbridge-url { font-size: 11px; }
+
+.link-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 2px;
+  font-size: 12px;
+  border: 1px solid var(--line-bright);
+  padding: 6px 12px;
+  background: var(--bg-inset);
+}
+
+.lamp {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 8px var(--red);
+}
+.lamp[data-status="connected"] {
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+}
+.lamp[data-status="connecting"] {
+  background: var(--amber);
+  box-shadow: 0 0 8px var(--amber);
+  animation: blink 0.8s steps(2) infinite;
+}
+@keyframes blink { 50% { opacity: 0.25; } }
+
+/* Whole-page cue when the link is down: thin red frame. */
+body.link-down::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  border: 2px solid rgba(255, 79, 88, 0.55);
+  z-index: 40;
+}
+
+/* ---- Layout ----------------------------------------------------------------- */
+
+main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 330px;
+  gap: 10px;
+  padding: 10px 16px;
+  min-height: 0;
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ---- Panels ------------------------------------------------------------------ */
+
+.panel {
+  position: relative;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  padding: 12px 14px 14px;
+}
+
+/* Corner ticks — the instrument-panel signature. */
+.panel::before, .panel::after {
+  content: "";
+  position: absolute;
+  width: 7px; height: 7px;
+  border-color: var(--green-dim);
+  border-style: solid;
+}
+.panel::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+.panel::after { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+
+.panel-title {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--ink-dim);
+  margin-bottom: 10px;
+}
+
+.panel.stale { opacity: 0.45; }
+.panel.alert { border-color: var(--red); }
+.panel.alert .panel-title { color: var(--red); }
+
+/* ---- Video -------------------------------------------------------------------- */
+
+.video-panel { display: flex; flex-direction: column; min-height: 0; }
+
+.video-frame {
+  position: relative;
+  flex: 1;
+  background: var(--bg-inset);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 0;
+}
+
+#video-stream {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* subtle scanlines over the video area */
+.video-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg, transparent 0 2px, rgba(0, 0, 0, 0.12) 2px 4px);
+}
+
+#video-nosignal {
+  color: var(--ink-dim);
+  letter-spacing: 6px;
+  font-size: 18px;
+  animation: nosignal 2.4s ease-in-out infinite;
+}
+@keyframes nosignal { 50% { opacity: 0.35; } }
+
+/* ---- Metrics ------------------------------------------------------------------- */
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+}
+
+.metric { display: flex; flex-direction: column; gap: 3px; }
+.metric-label { font-size: 10px; letter-spacing: 1px; color: var(--ink-dim); }
+.unit { color: var(--ink-dim); font-size: 10px; letter-spacing: 0; }
+
+.metric-value {
+  font-size: 17px;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+.metric-value.big { font-size: 28px; }
+
+.bar {
+  position: relative;
+  height: 5px;
+  background: var(--bg-inset);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.bar-fill {
+  position: absolute;
+  top: 0; bottom: 0;
+  background: var(--green);
+  transition: width 80ms linear, left 80ms linear;
+}
+.bar-fill.meas { background: var(--cyan); }
+.bar-fill.batt { left: 0; background: var(--green); }
+.panel.alert .bar-fill.batt { background: var(--red); }
+
+/* center tick on bidirectional bars */
+.bar::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 0; bottom: 0;
+  width: 1px;
+  background: var(--line-bright);
+}
+
+.power-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+
+.warning {
+  color: var(--red);
+  border: 1px solid var(--red);
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 3px 8px;
+  margin-left: auto;
+  animation: blink 1s steps(2) infinite;
+}
+
+/* ---- Tables / kv rows ------------------------------------------------------------ */
+
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  color: var(--ink-dim);
+  font-size: 10px;
+  font-weight: 400;
+  text-align: left;
+  padding: 3px 6px 3px 0;
+}
+.data-table td {
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+  padding: 3px 6px 3px 0;
+  font-size: 13px;
+}
+
+.kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 3px 0;
+}
+.kv > span:first-child { color: var(--ink-dim); font-size: 10px; letter-spacing: 1px; }
+.kv.stacked { flex-direction: column; align-items: flex-start; gap: 4px; }
+.kv.stacked code { word-break: break-all; }
+
+/* ---- Footer legend ----------------------------------------------------------------- */
+
+footer {
+  border-top: 1px solid var(--line);
+  background: var(--bg-panel);
+  padding: 8px 16px;
+}
+
+#legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 26px;
+}
+
+.legend-row { display: flex; gap: 8px; font-size: 11px; color: var(--ink-dim); }
+.legend-key {
+  color: var(--amber);
+  letter-spacing: 1px;
+  min-width: 52px;
+}
+
+/* ---- E-stop banner ------------------------------------------------------------------ */
+
+#estop-banner {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 50;
+  background: var(--red);
+  color: #14040a;
+  text-align: center;
+  font-size: 16px;
+  letter-spacing: 4px;
+  font-weight: 700;
+  padding: 10px;
+  animation: estop-flash 0.25s steps(2) 4;
+}
+@keyframes estop-flash { 50% { filter: brightness(1.6); } }

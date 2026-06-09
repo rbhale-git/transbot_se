@@ -12,6 +12,42 @@ robot (Jetson Nano B01, ROS Melodic).
   It publishes control topics and subscribes to telemetry via rosbridge, and
   embeds the MJPEG stream. No ROS install needed on the laptop.
 
+```mermaid
+flowchart LR
+    subgraph Laptop["Laptop (Windows, no ROS)"]
+        KB["keyboard.js<br/>deadman + e-stop"]
+        GP["gamepad.js"]
+        UI["panels / sliders<br/>settings / recorder"]
+        PUB["publisher modules<br/>motion · gimbal · arm<br/>(clamp everything)"]
+        ROSJS["ros.js<br/>rosbridge client"]
+        VID["video pane"]
+        KB --> PUB
+        GP --> PUB
+        UI --> PUB
+        PUB --> ROSJS
+    end
+
+    subgraph Jetson["Jetson Nano (ROS Melodic)"]
+        RB["rosbridge_server<br/>ws :9090"]
+        WVS["web_video_server<br/>http :8080"]
+        DRV["transbot_driver.py<br/>owns ALL hardware"]
+        CAM["camera node"]
+        HW["motors · servos · IMU · battery"]
+        RB -- "/cmd_vel<br/>/PWMServo<br/>/TargetAngle" --> DRV
+        DRV -- "/transbot/get_vel<br/>/transbot/imu<br/>battery topic<br/>/CurrentAngle (srv)" --> RB
+        DRV --- HW
+        CAM --> WVS
+    end
+
+    ROSJS <-- "WebSocket :9090" --> RB
+    VID -- "MJPEG :8080" --> WVS
+```
+
+The contract that makes this safe and extensible: **only `transbot_driver.py`
+touches hardware**, and **only the publisher modules talk to the control
+topics** from the laptop side. Everything else — keyboard, gamepad, panels,
+and any future input — is a client of those two layers.
+
 ## Network profiles
 
 The robot is reachable two ways, and both are first-class:
@@ -113,6 +149,69 @@ lights when a controller is detected (press any button to wake it).
 (:9090), and web_video_server (:8080) together; `robot/start_dashboard.sh` is
 the one-command robot-side entry point. Package installs on the robot are
 deliberately not scripted — they happen only after an explicit go-ahead.
+
+## Config reference (`dashboard/js/config.js`)
+
+Everything tunable lives in one module. Entries marked **TO-VERIFY** are
+vendor-doc hints that Phase 1 discovery will confirm or correct; all code
+reads them from config, so fixes land in one place.
+
+| Block | Holds | Notes |
+| --- | --- | --- |
+| `PROFILES` | rosbridge + video URL per network | `mock`, `home` (192.168.1.11), `hotspot` (IP TO-VERIFY) |
+| `TOPICS` | name + message type per topic | `/cmd_vel` verified (ROS standard); `/PWMServo`, `/TargetAngle`, telemetry topics TO-VERIFY |
+| `SERVICES` | `/CurrentAngle` (TO-VERIFY), `/rosapi/get_time` | latter ships with rosbridge |
+| `MOTION` | `hardMax` (driver limits, never exceeded) and `cap` (operating limit) per axis | caps are live-tunable in SETTINGS, clamped to `hardMax` |
+| `GIMBAL` / `ARM` | servo ids, ranges, home angles, step sizes, arm `run_time` | ranges from the brief, TO-VERIFY |
+| `POWER` | low-voltage warning threshold | 9.9 V for the 3S pack, TO-VERIFY |
+| `KEYS` | every key binding (`event.code` values) | legend renders from this, so docs can't drift |
+| `GAMEPAD` | deadzone, rates, button mapping | standard-mapping layout |
+| `TELEMETRY` / `RECONNECT` | poll intervals, staleness window, backoff | — |
+
+Message-shape assumptions for the two custom topics are isolated in
+`buildPwmServoMessage()` (gimbal.js) and `buildArmMessage()` (arm.js) — the
+only two functions to edit after discovery.
+
+## Extending this
+
+The dashboard is deliberately just *one publisher among potential many*. The
+driver doesn't know or care who publishes; anything that writes valid,
+range-clamped messages to the control topics drives the robot identically.
+
+**Topic contract (verify exact types against `FINDINGS.md` after Phase 1):**
+
+| Topic | Type | Carries |
+| --- | --- | --- |
+| `/cmd_vel` | `geometry_msgs/Twist` | `linear.x` m/s, `angular.z` rad/s |
+| `/PWMServo` | custom (TO-VERIFY) | gimbal servo id (1=pan, 2=tilt) + angle 0–180° |
+| `/TargetAngle` | custom (TO-VERIFY) | arm joint id (7/8/9) + angle + `run_time` ms |
+
+**An AI behavior node** (e.g. person-following, line tracking) should run on
+the Jetson as a native ROS node (rospy/roscpp) and publish the topics above
+directly — no rosbridge hop, lowest latency. It can subscribe to the same
+telemetry (`/transbot/get_vel`, IMU, camera) the dashboard uses. The dashboard
+keeps working as a monitor while the node drives; the spacebar e-stop still
+publishes zero Twists, but note ROS does not arbitrate between publishers —
+a safety-minded behavior node should subscribe to a mute/e-stop signal or be
+stopped before manual override matters.
+
+**An external arm-teleoperation device** (the encoder glove idea) has two
+clean integration points:
+
+1. *Through the dashboard (quickest):* feed device readings to
+   `setArmJoint('j7'|'j8'|'j9', angleDeg)` and `setGimbalX/Y()` — e.g. from a
+   small WebSocket/serial bridge page-side. Clamping, `run_time`, and the
+   recorder come for free, exactly like the gamepad integration did.
+2. *As its own publisher:* a standalone process (any language) connects to
+   `ws://<jetson>:9090` with a rosbridge client (roslibpy, roslibjs) — or runs
+   as a native ROS node on the Jetson — and publishes `/TargetAngle` itself.
+   It must then own its safety duties: clamp to the discovered ranges, send a
+   moderate `run_time`, and stop publishing on sensor dropout.
+
+**Rules for any new publisher:** clamp every value to the discovered ranges,
+never touch flash/persistent servo parameters, include `run_time` on arm
+moves, and implement deadman behavior — if your input source dies, your last
+command must be a stop (zero Twist) or a hold (arm).
 
 Deadman behavior: motion stops on key release, on tab blur or page hide, and
 on rosbridge disconnect.

@@ -1,0 +1,29 @@
+<launch>
+  <!-- =====================================================================
+       transbot_dashboard.launch — everything the dashboard needs, one file.
+       Deployed to ~/transbot_dashboard/ on the Jetson in Phase 2.
+
+       Starts:
+         1. the stock Yahboom driver bringup (owns ALL hardware — the
+            dashboard only ever talks to its topics)
+         2. rosbridge_server  -> WebSocket on :9090 (control + telemetry)
+         3. web_video_server  -> MJPEG over HTTP on :8080 (camera pane)
+
+       TO-VERIFY in Phase 2: that bringup.launch tolerates being included
+       (vs. run standalone), and the camera topic name for the stream URL.
+       ===================================================================== -->
+
+  <!-- 1. Yahboom driver + camera bringup -->
+  <include file="$(find transbot_bringup)/launch/bringup.launch" />
+
+  <!-- 2. rosbridge WebSocket server -->
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
+    <arg name="port" value="9090" />
+  </include>
+
+  <!-- 3. MJPEG video server -->
+  <node name="web_video_server" pkg="web_video_server" type="web_video_server"
+        output="screen">
+    <param name="port" value="8080" />
+  </node>
+</launch>

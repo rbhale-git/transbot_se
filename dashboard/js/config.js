@@ -55,6 +55,10 @@ export const SERVICES = {
   // Reads current arm joint angles.
   // TO-VERIFY: service type and response field layout.
   currentAngle: { name: '/CurrentAngle', type: 'transbot_msgs/RobotArm', verified: false },
+
+  // Standard rosapi service (ships with rosbridge_server) — used to measure
+  // round-trip latency over the WebSocket.
+  getTime: { name: '/rosapi/get_time', type: 'rosapi/GetTime', verified: true },
 };
 
 // ---- Motion limits ---------------------------------------------------------
@@ -98,6 +102,19 @@ export const POWER = {
 export const TELEMETRY = {
   armPollMs: 2000,      // /CurrentAngle service poll interval
   staleAfterMs: 3000,   // mark a panel stale if nothing arrived in this window
+  latencyPollMs: 2000,  // RTT measurement interval (rosapi/get_time round trip)
+};
+
+// ---- Gamepad (standard-mapping controller, e.g. Xbox) -----------------------
+export const GAMEPAD = {
+  pollMs: 50,             // 20 Hz input polling
+  deadzone: 0.15,         // stick deflection below this is ignored
+  gimbalRateDegS: 45,     // right-stick full deflection sweeps this fast
+  armRateDegS: 40,        // d-pad / trigger joint speed
+  buttons: {              // standard mapping indices
+    eStop: 1,             // B
+    armHome: 0,           // A
+  },
 };
 
 // ---- Key bindings ----------------------------------------------------------

@@ -73,7 +73,8 @@ function releaseAll() {
   stopMotion();
 }
 
-function eStop() {
+/** Fire the e-stop from any input source (spacebar, gamepad button, UI). */
+export function triggerEStop() {
   releaseAll(); // includes the zero-Twist burst
   for (const fn of eStopListeners) fn();
 }
@@ -94,7 +95,7 @@ function handleKeyDown(e) {
   if (e.code === KEYS.eStop) {
     e.preventDefault();
     e.stopImmediatePropagation();
-    eStop();
+    triggerEStop();
     return;
   }
   if (inFormControl(e)) return;

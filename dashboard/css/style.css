@@ -102,6 +102,47 @@ h1 .dim { font-weight: 400; letter-spacing: 1px; }
 }
 @keyframes blink { 50% { opacity: 0.25; } }
 
+.rtt {
+  color: var(--ink-dim);
+  font-size: 11px;
+  letter-spacing: 0;
+  min-width: 48px;
+  text-align: right;
+}
+.rtt.slow { color: var(--amber); }
+
+.pad-indicator {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--ink-dim);
+  border: 1px solid var(--line);
+  padding: 4px 8px;
+  opacity: 0.5;
+}
+.pad-indicator.on {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  opacity: 1;
+}
+
+.hbtn {
+  background: var(--bg-inset);
+  color: var(--ink);
+  border: 1px solid var(--line-bright);
+  font-family: var(--font);
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.hbtn:hover:not(:disabled) { border-color: var(--green); color: var(--green); }
+.hbtn:disabled { opacity: 0.35; cursor: default; }
+.hbtn.recording {
+  color: var(--red);
+  border-color: var(--red);
+  animation: blink 1s steps(2) infinite;
+}
+
 /* Whole-page cue when the link is down: thin red frame. */
 body.link-down::after {
   content: "";

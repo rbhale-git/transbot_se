@@ -19,9 +19,19 @@ let intentionalClose = false;
 
 const topicCache = new Map();   // topicName -> ROSLIB.Topic
 const statusListeners = [];     // fn('connecting' | 'connected' | 'disconnected')
+const trafficTaps = [];         // fn(direction: 'out'|'in'|'svc', name, payload)
 
 export function onStatus(fn) {
   statusListeners.push(fn);
+}
+
+/** Observe all topic/service traffic (used by the recorder). */
+export function onTraffic(fn) {
+  trafficTaps.push(fn);
+}
+
+function emitTraffic(direction, name, payload) {
+  for (const fn of trafficTaps) fn(direction, name, payload);
 }
 
 function emitStatus(status) {
@@ -95,6 +105,7 @@ function getTopic(topicCfg) {
 export function publish(topicCfg, msg) {
   if (!isConnected()) return false;
   getTopic(topicCfg).publish(new ROSLIB.Message(msg));
+  emitTraffic('out', topicCfg.name, msg);
   return true;
 }
 
@@ -102,8 +113,12 @@ export function publish(topicCfg, msg) {
 export function subscribe(topicCfg, callback) {
   if (!isConnected()) return () => {};
   const t = getTopic(topicCfg);
-  t.subscribe(callback);
-  return () => t.unsubscribe(callback);
+  const wrapped = (msg) => {
+    emitTraffic('in', topicCfg.name, msg);
+    callback(msg);
+  };
+  t.subscribe(wrapped);
+  return () => t.unsubscribe(wrapped);
 }
 
 /** Call a config-defined service. Resolves with the response, rejects on
@@ -119,7 +134,11 @@ export function callService(serviceCfg, args = {}, timeoutMs = 3000) {
     const timer = setTimeout(() => reject(new Error('service timeout')), timeoutMs);
     svc.callService(
       new ROSLIB.ServiceRequest(args),
-      (resp) => { clearTimeout(timer); resolve(resp); },
+      (resp) => {
+        clearTimeout(timer);
+        emitTraffic('svc', serviceCfg.name, resp);
+        resolve(resp);
+      },
       (err) => { clearTimeout(timer); reject(new Error(err)); },
     );
   });

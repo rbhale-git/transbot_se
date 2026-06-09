@@ -79,6 +79,10 @@ def service_response(service: str, call_id):
                 {"id": jid, "angle": angle} for jid, angle in state["arm"].items()
             ]
         }
+    elif service == "/rosapi/get_time":
+        # Standard rosapi service; the dashboard uses it to measure RTT.
+        now = time.time()
+        values = {"time": {"secs": int(now), "nsecs": int((now % 1) * 1e9)}}
     else:
         values = {}
     resp = {"op": "service_response", "service": service, "values": values, "result": True}

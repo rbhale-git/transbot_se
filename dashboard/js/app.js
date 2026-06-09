@@ -13,6 +13,13 @@ import { onArmChange, setArmJoint } from './publishers/arm.js';
 import { initKeyboard, onEStop } from './keyboard.js';
 import { initTelemetry, onTelemetry } from './telemetry.js';
 import { initVideo, setVideoUrl } from './video.js';
+import { loadSettings, applySetting, SETTING_DEFS } from './settings.js';
+import { initGamepad, onPadStatus } from './gamepad.js';
+import { initLatency, onLatency } from './latency.js';
+import {
+  initRecorder, onRecorderChange, startRecording, stopRecording,
+  isRecording, downloadRecording,
+} from './recorder.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -146,12 +153,12 @@ function initPowerPanel() {
  * Returns { update } for reflecting publisher state back into the controls
  * (programmatic .value writes don't re-fire input events, so no feedback loop).
  */
-function bindAxisControl({ sliderId, numId, min, max, set }) {
-  const slider = $(sliderId);
-  const num = $(numId);
+function bindAxisControl({ sliderId, numId, slider: sliderEl, num: numEl, min, max, step = 1, set }) {
+  const slider = sliderEl ?? $(sliderId);
+  const num = numEl ?? $(numId);
   slider.min = num.min = min;
   slider.max = num.max = max;
-  slider.step = num.step = 1;
+  slider.step = num.step = step;
 
   let pending = null;
   let timer = null;
@@ -213,6 +220,71 @@ function initArmPanel() {
   });
 }
 
+// ---- Settings panel -------------------------------------------------------------
+// Rows are generated from SETTING_DEFS so panel and behavior can't drift.
+
+function initSettingsPanel() {
+  loadSettings();
+  const host = $('settings-rows');
+  for (const [key, def] of Object.entries(SETTING_DEFS)) {
+    const row = document.createElement('div');
+    row.className = 'ctl';
+    row.innerHTML = `
+      <div class="ctl-head">
+        <span class="ctl-label">${def.label}</span>
+        <input type="number" class="ctl-num">
+        <span class="unit">${def.unit}</span>
+      </div>
+      <input type="range" class="ctl-slider">`;
+    host.appendChild(row);
+
+    const ctl = bindAxisControl({
+      slider: row.querySelector('.ctl-slider'),
+      num: row.querySelector('.ctl-num'),
+      min: def.min, max: def.max, step: def.step,
+      set: (v) => ctl.update(applySetting(key, v)),
+    });
+    ctl.update(def.get());
+  }
+}
+
+// ---- Header widgets: gamepad indicator, RTT, recorder ----------------------------
+
+function initPadIndicator() {
+  const el = $('pad-indicator');
+  onPadStatus((connected, id) => {
+    el.classList.toggle('on', connected);
+    el.title = connected ? id : 'no gamepad';
+  });
+}
+
+function initLatencyReadout() {
+  const el = $('rtt');
+  onLatency((rtt) => {
+    el.textContent = rtt === null ? '--' : `${rtt}ms`;
+    el.classList.toggle('slow', rtt !== null && rtt > 250);
+  });
+}
+
+function initRecorderControls() {
+  const recBtn = $('rec-btn');
+  const saveBtn = $('save-btn');
+  recBtn.addEventListener('click', () => {
+    if (isRecording()) stopRecording();
+    else startRecording();
+    recBtn.blur(); // keep focus free for driving keys
+  });
+  saveBtn.addEventListener('click', () => {
+    downloadRecording();
+    saveBtn.blur();
+  });
+  onRecorderChange(({ recording, count }) => {
+    recBtn.classList.toggle('recording', recording);
+    recBtn.textContent = recording ? `■ ${count}` : '● REC';
+    saveBtn.disabled = recording || count === 0;
+  });
+}
+
 // ---- E-stop banner ------------------------------------------------------------
 
 function initEStopBanner() {
@@ -234,6 +306,7 @@ function initLegend() {
     ['E-STOP', 'SPACE'],
     ['Gimbal', `${pretty(KEYS.gimbal.left)}/${pretty(KEYS.gimbal.right)}/${pretty(KEYS.gimbal.up)}/${pretty(KEYS.gimbal.down)} arrows · ${pretty(KEYS.gimbal.recenter)} recenter`],
     ['Arm', `${pretty(KEYS.arm.j7Up)}/${pretty(KEYS.arm.j7Down)} j7 · ${pretty(KEYS.arm.j8Up)}/${pretty(KEYS.arm.j8Down)} j8 · ${pretty(KEYS.arm.j9Up)}/${pretty(KEYS.arm.j9Down)} j9 (grip) · ${pretty(KEYS.arm.home)} home`],
+    ['Pad', 'L-stick drive · R-stick gimbal · LT/RT grip · D-pad J7/J8 · B e-stop · A home'],
   ];
   $('legend').innerHTML = rows
     .map(([k, v]) => `<div class="legend-row"><span class="legend-key">${k}</span><span>${v}</span></div>`)
@@ -245,12 +318,19 @@ function initLegend() {
 initVideo($('video-stream'), $('video-nosignal'));
 initTelemetry();
 initKeyboard();
+initGamepad();
+initLatency();
+initRecorder();
 initStatusLamp();
 initDrivePanel();
 initImuPanel();
 initPowerPanel();
 initGimbalPanel();
 initArmPanel();
+initSettingsPanel();
+initPadIndicator();
+initLatencyReadout();
+initRecorderControls();
 initEStopBanner();
 initLegend();
 initProfileSelect(); // last: triggers the first connect

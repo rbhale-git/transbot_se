@@ -67,6 +67,13 @@ async def main():
         assert angles[7] == 42, angles
         print(f"PASS  /TargetAngle updates pose: j7={angles[7]}")
 
+        # 5. /rosapi/get_time (used by the dashboard's RTT readout)
+        await ws.send(json.dumps({"op": "call_service", "service": "/rosapi/get_time", "id": "t3"}))
+        m = await expect(ws, lambda m: m.get("op") == "service_response" and m.get("id") == "t3",
+                         what="/rosapi/get_time response")
+        assert m["values"]["time"]["secs"] > 0, m
+        print(f"PASS  /rosapi/get_time responds: secs={m['values']['time']['secs']}")
+
     print("ALL PASS")
 
 

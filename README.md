@@ -75,6 +75,45 @@ the gripper joint J9 — are continuous; ranges come from `config.js` and every
 value is clamped before publishing. Keyboard steps, sliders, and typed values
 all stay in sync.
 
+### Gamepad (standard-mapping controller, e.g. Xbox)
+
+| Control | Action |
+| --- | --- |
+| Left stick | drive — analog, partial deflection = partial speed |
+| Right stick | gimbal pan/tilt |
+| LT / RT | gripper joint J9 close / open |
+| D-pad | J7 (left/right), J8 (up/down) |
+| B | e-stop (same path as spacebar) |
+| A | arm home pose |
+
+Stick release stops the robot (deadman parity with the keyboard); a
+disconnecting pad sends an immediate stop. The PAD indicator in the header
+lights when a controller is detected (press any button to wake it).
+
+### Other dashboard tools
+
+- **SETTINGS panel** — live-tune the speed caps (never above the hard driver
+  limits), gimbal/arm step sizes, and arm `run_time`. Persisted across
+  reloads in localStorage.
+- **RTT readout** — round-trip latency over rosbridge (via `/rosapi/get_time`),
+  next to the link lamp; turns amber above 250 ms.
+- **Session recorder** — ● REC in the header captures every outgoing command,
+  telemetry message, and service response with timestamps; SAVE downloads a
+  JSONL file. This is the evidence trail for the Phase 4 safety pass.
+
+## Robot-day tooling (Phases 0–2, prepared in advance)
+
+```powershell
+.\tools\setup_ssh.ps1     -JetsonIp <ip> -User <user>  # Phase 0: key install + verify
+.\tools\run_discovery.ps1 -JetsonIp <ip> -User <user>  # Phase 1: read-only discovery
+.\tools\deploy_robot.ps1  -JetsonIp <ip> -User <user>  # Phase 2: push launch + start script
+```
+
+`robot/transbot_dashboard.launch` starts the driver bringup, rosbridge
+(:9090), and web_video_server (:8080) together; `robot/start_dashboard.sh` is
+the one-command robot-side entry point. Package installs on the robot are
+deliberately not scripted — they happen only after an explicit go-ahead.
+
 Deadman behavior: motion stops on key release, on tab blur or page hide, and
 on rosbridge disconnect.
 

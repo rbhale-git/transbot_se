@@ -92,13 +92,13 @@ export function stepSign(axisCfg) {
 // ---- Arm -------------------------------------------------------------------
 // Three continuous DOF; servo 9 is the gripper joint (per brief) but is
 // treated exactly like the others — full-range slider/keyboard control.
-// Home = the arm's boot/stow pose as reported live by /CurrentAngle on the
-// real robot (J7 224, J8 30, J9 90), so the H key returns the arm to stow.
+// Home pose chosen by the operator (stow position): J7 225, J8 30, J9 30.
+// Reached via the H key or the HOME button in the ARM panel.
 export const ARM = {
   joints: {
-    j7: { servoId: 7, min: 0, max: 225, home: 224 },
+    j7: { servoId: 7, min: 0, max: 225, home: 225 },
     j8: { servoId: 8, min: 30, max: 270, home: 30 },
-    j9: { servoId: 9, min: 30, max: 180, home: 90 }, // gripper joint (per brief)
+    j9: { servoId: 9, min: 30, max: 180, home: 30 }, // gripper joint (per brief)
   },
   stepDeg: 4,
   runTimeMs: 800, // moderate move time so joints never slam (brief requirement)

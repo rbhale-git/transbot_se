@@ -625,6 +625,29 @@ main {
 }
 .ctl-slider:focus { outline: none; }
 
+/* ---- Panel buttons -------------------------------------------------------------------------------- */
+
+.panel-btn {
+  width: 100%;
+  margin-top: 4px;
+  background: var(--bg-inset);
+  color: var(--ink);
+  border: 1px solid var(--line-bright);
+  font-family: var(--display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  padding: 7px 0;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.panel-btn:hover {
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: 0 0 10px rgba(65, 240, 107, 0.2);
+}
+.panel-btn:active { background: var(--green-soft); }
+
 /* ---- Footer legend ------------------------------------------------------------------------------ */
 
 footer {

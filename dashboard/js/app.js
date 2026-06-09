@@ -9,7 +9,7 @@ import {
 import { connect, onStatus } from './ros.js';
 import { onMotionCommand } from './publishers/motion.js';
 import { onGimbalChange, setGimbalX, setGimbalY } from './publishers/gimbal.js';
-import { onArmChange, setArmJoint } from './publishers/arm.js';
+import { onArmChange, setArmJoint, armHome } from './publishers/arm.js';
 import { initKeyboard, onEStop } from './keyboard.js';
 import { initTelemetry, onTelemetry } from './telemetry.js';
 import { initVideo, setVideoUrl } from './video.js';
@@ -216,6 +216,10 @@ function initArmPanel() {
   }
   onArmChange(({ angles }) => {
     for (const key of Object.keys(controls)) controls[key].update(angles[key]);
+  });
+  $('arm-home-btn').addEventListener('click', (e) => {
+    armHome();
+    e.target.blur(); // keep focus free for driving keys
   });
   onTelemetry('arm', ({ ok, raw }) => {
     // Verified shape: {RobotArm: {joint: [{id, run_time, angle}]}}.

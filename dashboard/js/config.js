@@ -52,6 +52,8 @@ export const TOPICS = {
   imu: { name: '/imu/data', type: 'sensor_msgs/Imu', verified: true },
   // Single field: float32 Voltage (capital V).
   battery: { name: '/voltage', type: 'transbot_msgs/Battery', verified: true },
+  // Published once per captured frame by usb_cam — used as the FPS meter.
+  cameraInfo: { name: '/usb_cam/camera_info', type: 'sensor_msgs/CameraInfo', verified: true },
 };
 
 export const SERVICES = {

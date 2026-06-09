@@ -128,12 +128,19 @@ def gen_battery() -> dict:
     return {"Voltage": round(state["battery"], 2)}
 
 
+def gen_camera_info() -> dict:
+    # One per captured frame on the real robot; the dashboard counts these
+    # for its FPS meter. ~30 Hz to mirror usb_cam.
+    return {"width": 640, "height": 480}
+
+
 # topic -> (message generator, publish period in seconds)
 # Topic names mirror the real robot (FINDINGS.md); /imu/data is the filtered IMU.
 TELEMETRY = {
     "/transbot/get_vel": (gen_get_vel, 0.1),
     "/imu/data": (gen_imu, 0.2),
     "/voltage": (gen_battery, 1.0),
+    "/usb_cam/camera_info": (gen_camera_info, 1 / 30),
 }
 
 

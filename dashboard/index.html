@@ -28,6 +28,11 @@
       <span id="pad-indicator" class="pad-indicator" title="no gamepad">PAD</span>
       <button id="rec-btn" class="hbtn" title="record all topic traffic">&#9679; REC</button>
       <button id="save-btn" class="hbtn" title="download session as JSONL" disabled>SAVE</button>
+      <div class="power-widget" id="power-widget" title="battery voltage">
+        <span class="pw-volt"><b id="battery-voltage">--</b><span class="unit">V</span></span>
+        <div class="bar batt-bar"><div class="bar-fill batt" id="battery-bar"></div></div>
+        <span id="battery-warning" class="warning hidden">LOW</span>
+      </div>
       <div class="link-status">
         <span id="link-lamp" class="lamp" data-status="disconnected"></span>
         <span id="link-text">LINK DOWN</span>
@@ -48,12 +53,19 @@
           <div id="video-nosignal">
             <span>NO SIGNAL</span>
           </div>
-          <!-- live HUD: commanded velocities + recording marker -->
+          <!-- live HUD: commanded velocities + recording marker (top-left) -->
           <div class="hud">
             <span class="hud-item">LIN <b id="hud-lin">0.00</b></span>
             <span class="hud-item">ANG <b id="hud-ang">0.00</b></span>
             <span class="hud-item hud-rec hidden" id="hud-rec">&#9679; REC</span>
           </div>
+          <!-- IMU overlay (top-right) -->
+          <div class="hud-imu" id="hud-imu">
+            <div><span class="hud-tag">ACC</span> <b id="hud-imu-acc">--</b></div>
+            <div><span class="hud-tag">GYR</span> <b id="hud-imu-gyr">--</b></div>
+          </div>
+          <!-- FPS (bottom-left) -->
+          <div class="hud-fps"><b id="hud-fps">--</b> FPS</div>
         </div>
       </div>
     </section>
@@ -87,31 +99,8 @@
         </div>
       </section>
 
-      <section id="power-panel" class="panel" aria-label="power">
-        <div class="panel-title"><span class="num">02</span>POWER</div>
-        <div class="power-row">
-          <span class="metric-value big" id="battery-voltage">--</span>
-          <span class="unit">V</span>
-          <span id="battery-warning" class="warning hidden">LOW BATTERY</span>
-        </div>
-        <div class="bar batt-bar"><div class="bar-fill batt" id="battery-bar"></div></div>
-        <div class="batt-scale">
-          <span id="batt-min"></span>
-          <span id="batt-max"></span>
-        </div>
-      </section>
-
-      <section id="imu-panel" class="panel" aria-label="imu">
-        <div class="panel-title"><span class="num">03</span>IMU</div>
-        <table class="data-table">
-          <tr><th></th><th>X</th><th>Y</th><th>Z</th></tr>
-          <tr><th>ACC</th><td id="imu-ax">--</td><td id="imu-ay">--</td><td id="imu-az">--</td></tr>
-          <tr><th>GYR</th><td id="imu-gx">--</td><td id="imu-gy">--</td><td id="imu-gz">--</td></tr>
-        </table>
-      </section>
-
       <section id="gimbal-panel" class="panel" aria-label="gimbal">
-        <div class="panel-title"><span class="num">04</span>GIMBAL</div>
+        <div class="panel-title"><span class="num">02</span>GIMBAL</div>
         <!-- 2D position map: the dot is where the camera points -->
         <div class="gimbal-map" aria-hidden="true">
           <div class="gimbal-dot" id="gimbal-dot"></div>
@@ -137,7 +126,7 @@
       </section>
 
       <section id="arm-panel" class="panel" aria-label="arm">
-        <div class="panel-title"><span class="num">05</span>ARM</div>
+        <div class="panel-title"><span class="num">03</span>ARM</div>
         <div class="ctl">
           <div class="ctl-head">
             <span class="ctl-label">J7</span>
@@ -167,7 +156,7 @@
       </section>
 
       <section id="settings-panel" class="panel" aria-label="settings">
-        <div class="panel-title"><span class="num">06</span>SETTINGS</div>
+        <div class="panel-title"><span class="num">04</span>SETTINGS</div>
         <!-- rows are generated from SETTING_DEFS in settings.js -->
         <div id="settings-rows"></div>
       </section>

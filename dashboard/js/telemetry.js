@@ -9,9 +9,11 @@
 import { TOPICS, SERVICES, TELEMETRY } from './config.js';
 import { subscribe, callService, isConnected, onStatus } from './ros.js';
 
-const listeners = { vel: [], imu: [], battery: [], arm: [] };
+const listeners = { vel: [], imu: [], battery: [], arm: [], fps: [] };
 const unsubs = [];
 let armPollTimer = null;
+let fpsTimer = null;
+let frameCount = 0;
 
 export function onTelemetry(channel, fn) {
   listeners[channel].push(fn);
@@ -55,6 +57,14 @@ function startSubscriptions() {
   unsubs.push(subscribe(TOPICS.imu, (m) => emit('imu', extractImu(m))));
   unsubs.push(subscribe(TOPICS.battery, (m) => emit('battery', extractBattery(m))));
 
+  // Camera FPS: camera_info arrives once per captured frame.
+  frameCount = 0;
+  unsubs.push(subscribe(TOPICS.cameraInfo, () => { frameCount += 1; }));
+  fpsTimer = setInterval(() => {
+    emit('fps', frameCount);
+    frameCount = 0;
+  }, 1000);
+
   // Poll arm joint angles via the /CurrentAngle service.
   // Verified request shape: {apply: string}; response: {RobotArm: {joint: []}}.
   armPollTimer = setInterval(async () => {
@@ -72,6 +82,9 @@ function stopSubscriptions() {
   while (unsubs.length) unsubs.pop()();
   clearInterval(armPollTimer);
   armPollTimer = null;
+  clearInterval(fpsTimer);
+  fpsTimer = null;
+  emit('fps', null);
 }
 
 export function initTelemetry() {

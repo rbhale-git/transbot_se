@@ -105,37 +105,40 @@ function initDrivePanel() {
   }, 1000);
 }
 
-// ---- IMU panel --------------------------------------------------------------
+// ---- IMU overlay (top-right of the camera stage) ------------------------------
 
-function initImuPanel() {
+function initImuOverlay() {
   let lastAt = 0;
   onTelemetry('imu', ({ accel, gyro }) => {
     lastAt = performance.now();
-    $('imu-ax').textContent = fmt(accel?.x);
-    $('imu-ay').textContent = fmt(accel?.y);
-    $('imu-az').textContent = fmt(accel?.z);
-    $('imu-gx').textContent = fmt(gyro?.x);
-    $('imu-gy').textContent = fmt(gyro?.y);
-    $('imu-gz').textContent = fmt(gyro?.z);
+    $('hud-imu-acc').textContent =
+      `${fmt(accel?.x, 1)} ${fmt(accel?.y, 1)} ${fmt(accel?.z, 1)}`;
+    $('hud-imu-gyr').textContent =
+      `${fmt(gyro?.x, 2)} ${fmt(gyro?.y, 2)} ${fmt(gyro?.z, 2)}`;
   });
   setInterval(() => {
-    $('imu-panel').classList.toggle(
+    $('hud-imu').classList.toggle(
       'stale', performance.now() - lastAt > TELEMETRY.staleAfterMs);
   }, 1000);
 }
 
-// ---- Power panel --------------------------------------------------------------
+// ---- FPS counter (bottom-left of the camera stage) -----------------------------
 
-function initPowerPanel() {
-  // Scale endpoints come from config so the bar is self-describing.
-  $('batt-min').textContent = `${POWER.lowVoltage.toFixed(1)}V`;
-  $('batt-max').textContent = `${POWER.fullVoltage.toFixed(1)}V`;
+function initFpsCounter() {
+  onTelemetry('fps', (fps) => {
+    $('hud-fps').textContent = fps === null ? '--' : fps;
+  });
+}
+
+// ---- Power widget (header) -------------------------------------------------------
+
+function initPowerWidget() {
   let lastAt = 0;
   onTelemetry('battery', ({ voltage }) => {
     lastAt = performance.now();
     $('battery-voltage').textContent = fmt(voltage, 1);
     const low = typeof voltage === 'number' && voltage < POWER.lowVoltage;
-    $('power-panel').classList.toggle('alert', low);
+    $('power-widget').classList.toggle('alert', low);
     $('battery-warning').classList.toggle('hidden', !low);
     const pct = typeof voltage === 'number'
       ? Math.max(0, Math.min(1, (voltage - POWER.lowVoltage) /
@@ -144,7 +147,7 @@ function initPowerPanel() {
     $('battery-bar').style.width = `${(pct * 100).toFixed(0)}%`;
   });
   setInterval(() => {
-    $('power-panel').classList.toggle(
+    $('power-widget').classList.toggle(
       'stale', performance.now() - lastAt > TELEMETRY.staleAfterMs);
   }, 1000);
 }
@@ -354,8 +357,9 @@ initLatency();
 initRecorder();
 initStatusLamp();
 initDrivePanel();
-initImuPanel();
-initPowerPanel();
+initImuOverlay();
+initFpsCounter();
+initPowerWidget();
 initGimbalPanel();
 initArmPanel();
 initSettingsPanel();

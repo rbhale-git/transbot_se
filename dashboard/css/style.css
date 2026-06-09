@@ -230,6 +230,32 @@ h1 .dim { font-weight: 400; letter-spacing: 2px; font-size: 12px; }
   animation: blink 1s steps(2) infinite;
 }
 
+/* ---- Power widget (header battery) ---- */
+
+.power-widget {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line-bright);
+  padding: 5px 10px;
+  background: var(--bg-inset);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+.power-widget .pw-volt b {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 10px rgba(65, 240, 107, 0.25);
+}
+.power-widget .pw-volt .unit { margin-left: 2px; }
+.power-widget .bar { width: 56px; }
+.power-widget.stale { opacity: 0.45; }
+.power-widget.alert { border-color: var(--red); }
+.power-widget.alert .pw-volt b { color: var(--red); text-shadow: 0 0 10px rgba(255, 68, 82, 0.4); }
+.power-widget.alert .bar-fill.batt { background: var(--red); box-shadow: 0 0 8px rgba(255, 68, 82, 0.5); }
+.power-widget .warning { margin-left: 0; padding: 2px 5px; font-size: 8px; }
+
 .link-status {
   display: flex;
   align-items: center;
@@ -454,6 +480,50 @@ main {
   animation: blink 1s steps(2) infinite;
 }
 
+/* IMU overlay, top-right of the stage */
+.hud-imu {
+  position: absolute;
+  top: 16px; right: 18px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-end;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+  transition: opacity 0.3s;
+}
+.hud-imu .hud-tag {
+  font-family: var(--display);
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: rgba(174, 191, 204, 0.7);
+}
+.hud-imu b {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--cyan);
+}
+.hud-imu.stale { opacity: 0.3; }
+
+/* FPS, bottom-left of the stage */
+.hud-fps {
+  position: absolute;
+  bottom: 14px; left: 18px;
+  z-index: 3;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: rgba(174, 191, 204, 0.7);
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+}
+.hud-fps b {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+
 #video-nosignal {
   position: relative;
   z-index: 1;
@@ -509,7 +579,6 @@ main {
   text-shadow: 0 0 12px rgba(65, 240, 107, 0.25);
 }
 .metric-value.meas { color: var(--cyan); text-shadow: 0 0 12px rgba(79, 210, 255, 0.25); }
-.metric-value.big { font-size: 30px; font-weight: 700; }
 
 /* bars: bidirectional gauges with a ruler */
 .bar {
@@ -550,17 +619,6 @@ main {
 }
 .panel.alert .bar-fill.batt { background: var(--red); box-shadow: 0 0 8px rgba(255, 68, 82, 0.5); }
 
-.power-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
-
-.batt-scale {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 3px;
-  font-size: 9px;
-  color: var(--ink-dim);
-  font-variant-numeric: tabular-nums;
-}
-
 .warning {
   font-family: var(--display);
   color: var(--red);
@@ -573,24 +631,7 @@ main {
   box-shadow: 0 0 10px rgba(255, 68, 82, 0.2);
 }
 
-/* ---- Tables / kv rows ----------------------------------------------------------------------- */
-
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table th {
-  font-family: var(--display);
-  color: var(--ink-dim);
-  font-size: 9px;
-  font-weight: 400;
-  letter-spacing: 1px;
-  text-align: left;
-  padding: 3px 6px 3px 0;
-}
-.data-table td {
-  color: var(--cyan);
-  font-variant-numeric: tabular-nums;
-  padding: 3px 6px 3px 0;
-  font-size: 13px;
-}
+/* ---- kv rows ---------------------------------------------------------------------------------- */
 
 .kv {
   display: flex;

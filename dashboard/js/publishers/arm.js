@@ -1,13 +1,14 @@
 // ============================================================================
 // publishers/arm.js — the ONLY module that publishes /TargetAngle.
 //
-// Tracks commanded joint angles, exposes per-joint stepping, a gripper
-// toggle, and a home pose. Every move carries a moderate run_time so joints
-// never slam (brief safety requirement). All angles clamp to configured
-// ranges before publishing.
+// Tracks commanded joint angles and exposes per-joint stepping, absolute
+// positioning (sliders / typed values), and a home pose. All three joints —
+// including the gripper (servo 9) — are continuous DOF. Every move carries a
+// moderate run_time so joints never slam (brief safety requirement). All
+// angles clamp to configured ranges before publishing.
 //
 // TO-VERIFY (Phase 1): exact message type and field names for /TargetAngle,
-// which servo is truly the gripper, and the open/closed angles.
+// and which servo is truly the gripper.
 // buildArmMessage() is the single place to fix once discovered.
 // ============================================================================
 
@@ -17,7 +18,6 @@ import { publish } from '../ros.js';
 // Commanded joint angles (degrees), keyed j7/j8/j9. Start at home pose.
 const state = {};
 for (const [key, j] of Object.entries(ARM.joints)) state[key] = j.home;
-let gripperClosed = false;
 
 const listeners = [];
 
@@ -27,7 +27,7 @@ export function onArmChange(fn) {
 }
 
 function snapshot() {
-  return { angles: { ...state }, gripperClosed };
+  return { angles: { ...state } };
 }
 
 function notify() {
@@ -53,19 +53,15 @@ function publishJoints(moves) {
 
 /** Step one joint ('j7' | 'j8' | 'j9') by direction (+1 / -1). */
 export function stepArmJoint(jointKey, direction) {
-  const j = ARM.joints[jointKey];
-  state[jointKey] = clamp(state[jointKey] + direction * ARM.stepDeg, j.min, j.max);
-  publishJoints([{ servoId: j.servoId, angleDeg: state[jointKey] }]);
-  notify();
+  setArmJoint(jointKey, state[jointKey] + direction * ARM.stepDeg);
 }
 
-/** Toggle the gripper between configured open and closed angles. */
-export function toggleGripper() {
-  gripperClosed = !gripperClosed;
-  const key = ARM.gripper.jointKey;
-  const j = ARM.joints[key];
-  state[key] = clamp(gripperClosed ? ARM.gripper.closed : ARM.gripper.open, j.min, j.max);
-  publishJoints([{ servoId: j.servoId, angleDeg: state[key] }]);
+/** Set one joint to an absolute angle (sliders / typed values). */
+export function setArmJoint(jointKey, angleDeg) {
+  const j = ARM.joints[jointKey];
+  if (!j || !Number.isFinite(angleDeg)) return;
+  state[jointKey] = clamp(angleDeg, j.min, j.max);
+  publishJoints([{ servoId: j.servoId, angleDeg: state[jointKey] }]);
   notify();
 }
 
@@ -76,7 +72,6 @@ export function armHome() {
     state[key] = j.home;
     moves.push({ servoId: j.servoId, angleDeg: j.home });
   }
-  gripperClosed = false;
   publishJoints(moves);
   notify();
 }

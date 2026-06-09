@@ -75,16 +75,15 @@ export const GIMBAL = {
 };
 
 // ---- Arm -------------------------------------------------------------------
-// Ranges from the brief; servo 9 is reported as the gripper.
-// TO-VERIFY: which servo is really the gripper, safe home pose, and which
-// gripper angle means open vs closed.
+// Three continuous DOF; servo 9 is the gripper joint (per brief) but is
+// treated exactly like the others — full-range slider/keyboard control.
+// TO-VERIFY: which servo is really the gripper, and a safe home pose.
 export const ARM = {
   joints: {
     j7: { servoId: 7, min: 0, max: 225, home: 110 },
     j8: { servoId: 8, min: 30, max: 270, home: 150 },
-    j9: { servoId: 9, min: 30, max: 180, home: 90 }, // gripper (per brief)
+    j9: { servoId: 9, min: 30, max: 180, home: 90 }, // gripper joint (per brief)
   },
-  gripper: { jointKey: 'j9', open: 30, closed: 150 }, // TO-VERIFY angles
   stepDeg: 4,
   runTimeMs: 800, // moderate move time so joints never slam (brief requirement)
 };
@@ -121,8 +120,7 @@ export const KEYS = {
   arm: {
     j7Up: 'KeyU', j7Down: 'KeyJ',
     j8Up: 'KeyI', j8Down: 'KeyK',
-    j9Up: 'KeyO', j9Down: 'KeyL',
-    gripperToggle: 'KeyG',
+    j9Up: 'KeyO', j9Down: 'KeyL', // j9 = gripper joint
     home: 'KeyH',
   },
 };

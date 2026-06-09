@@ -66,8 +66,14 @@ Protocol self-test for the mock: `python mock/selftest.py` (mock must be running
 | A / D (hold) | rotate left / right (combinable with W/S) |
 | SPACE | e-stop — immediate zero Twist, highest priority |
 | Arrow keys | gimbal pan/tilt step, C recenter |
-| U/J, I/K, O/L | arm joints 7 / 8 / 9 step |
-| G | gripper toggle, H = arm home pose |
+| U/J, I/K, O/L | arm joints 7 / 8 / 9 step (J9 is the gripper joint) |
+| H | arm home pose |
+
+The gimbal and arm panels also have a slider plus a numeric entry field per
+axis (type a value and press Enter). All five axes — pan, tilt, J7, J8, and
+the gripper joint J9 — are continuous; ranges come from `config.js` and every
+value is clamped before publishing. Keyboard steps, sliders, and typed values
+all stay in sync.
 
 Deadman behavior: motion stops on key release, on tab blur or page hide, and
 on rosbridge disconnect.

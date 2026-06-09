@@ -39,13 +39,25 @@ function publishAxis(axisCfg, angleDeg) {
 
 /** Step the pan servo by `direction` (+1 right, -1 left). */
 export function stepGimbalX(direction) {
-  state.x = publishAxis(GIMBAL.x, state.x + direction * GIMBAL.stepDeg);
-  notify();
+  setGimbalX(state.x + direction * GIMBAL.stepDeg);
 }
 
 /** Step the tilt servo by `direction` (+1 up, -1 down). */
 export function stepGimbalY(direction) {
-  state.y = publishAxis(GIMBAL.y, state.y + direction * GIMBAL.stepDeg);
+  setGimbalY(state.y + direction * GIMBAL.stepDeg);
+}
+
+/** Set the pan servo to an absolute angle (sliders / typed values). */
+export function setGimbalX(angleDeg) {
+  if (!Number.isFinite(angleDeg)) return;
+  state.x = publishAxis(GIMBAL.x, angleDeg);
+  notify();
+}
+
+/** Set the tilt servo to an absolute angle (sliders / typed values). */
+export function setGimbalY(angleDeg) {
+  if (!Number.isFinite(angleDeg)) return;
+  state.y = publishAxis(GIMBAL.y, angleDeg);
   notify();
 }
 

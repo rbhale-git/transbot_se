@@ -91,16 +91,51 @@
 
       <section id="gimbal-panel" class="panel" aria-label="gimbal">
         <div class="panel-title">GIMBAL</div>
-        <div class="kv"><span>PAN</span><span class="metric-value" id="gimbal-x">90&deg;</span></div>
-        <div class="kv"><span>TILT</span><span class="metric-value" id="gimbal-y">90&deg;</span></div>
+        <!-- min/max/step are filled from config.js at boot — no values here -->
+        <div class="ctl">
+          <div class="ctl-head">
+            <span class="ctl-label">PAN</span>
+            <input type="number" id="gimbal-x-num" class="ctl-num">
+            <span class="unit">&deg;</span>
+          </div>
+          <input type="range" id="gimbal-x-slider" class="ctl-slider">
+        </div>
+        <div class="ctl">
+          <div class="ctl-head">
+            <span class="ctl-label">TILT</span>
+            <input type="number" id="gimbal-y-num" class="ctl-num">
+            <span class="unit">&deg;</span>
+          </div>
+          <input type="range" id="gimbal-y-slider" class="ctl-slider">
+        </div>
       </section>
 
       <section id="arm-panel" class="panel" aria-label="arm">
         <div class="panel-title">ARM</div>
-        <div class="kv"><span>J7 CMD</span><span class="metric-value" id="arm-j7">--</span></div>
-        <div class="kv"><span>J8 CMD</span><span class="metric-value" id="arm-j8">--</span></div>
-        <div class="kv"><span>J9 CMD</span><span class="metric-value" id="arm-j9">--</span></div>
-        <div class="kv"><span>GRIPPER</span><span class="metric-value" id="gripper-state">OPEN</span></div>
+        <div class="ctl">
+          <div class="ctl-head">
+            <span class="ctl-label">J7</span>
+            <input type="number" id="arm-j7-num" class="ctl-num">
+            <span class="unit">&deg;</span>
+          </div>
+          <input type="range" id="arm-j7-slider" class="ctl-slider">
+        </div>
+        <div class="ctl">
+          <div class="ctl-head">
+            <span class="ctl-label">J8</span>
+            <input type="number" id="arm-j8-num" class="ctl-num">
+            <span class="unit">&deg;</span>
+          </div>
+          <input type="range" id="arm-j8-slider" class="ctl-slider">
+        </div>
+        <div class="ctl">
+          <div class="ctl-head">
+            <span class="ctl-label">J9 &middot; GRIP</span>
+            <input type="number" id="arm-j9-num" class="ctl-num">
+            <span class="unit">&deg;</span>
+          </div>
+          <input type="range" id="arm-j9-slider" class="ctl-slider">
+        </div>
         <div class="kv stacked"><span>CURRENT (svc)</span><code id="arm-current" class="dim small">--</code></div>
       </section>
 

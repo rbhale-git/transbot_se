@@ -4,12 +4,12 @@
 // ============================================================================
 
 import {
-  PROFILES, DEFAULT_PROFILE, MOTION, POWER, TELEMETRY, KEYS,
+  PROFILES, DEFAULT_PROFILE, MOTION, POWER, TELEMETRY, KEYS, GIMBAL, ARM,
 } from './config.js';
 import { connect, onStatus } from './ros.js';
 import { onMotionCommand } from './publishers/motion.js';
-import { onGimbalChange } from './publishers/gimbal.js';
-import { onArmChange } from './publishers/arm.js';
+import { onGimbalChange, setGimbalX, setGimbalY } from './publishers/gimbal.js';
+import { onArmChange, setArmJoint } from './publishers/arm.js';
 import { initKeyboard, onEStop } from './keyboard.js';
 import { initTelemetry, onTelemetry } from './telemetry.js';
 import { initVideo, setVideoUrl } from './video.js';
@@ -138,19 +138,74 @@ function initPowerPanel() {
 
 // ---- Gimbal + arm panels ------------------------------------------------------
 
+/**
+ * Bind one axis to a slider + number input pair.
+ * - min/max come from config, never from the HTML.
+ * - Slider drags are throttled (trailing edge) so we don't flood the topic.
+ * - Controls blur after use so WASD driving keys are never captured.
+ * Returns { update } for reflecting publisher state back into the controls
+ * (programmatic .value writes don't re-fire input events, so no feedback loop).
+ */
+function bindAxisControl({ sliderId, numId, min, max, set }) {
+  const slider = $(sliderId);
+  const num = $(numId);
+  slider.min = num.min = min;
+  slider.max = num.max = max;
+  slider.step = num.step = 1;
+
+  let pending = null;
+  let timer = null;
+  const flush = () => {
+    timer = null;
+    if (pending !== null) { set(pending); pending = null; }
+  };
+  slider.addEventListener('input', () => {
+    pending = Number(slider.value);
+    if (!timer) timer = setTimeout(flush, 80); // ~12 Hz while dragging
+  });
+  slider.addEventListener('change', () => {  // drag released / arrow-key step
+    clearTimeout(timer);
+    flush();
+    slider.blur();
+  });
+  num.addEventListener('change', () => {      // Enter or focus-out
+    set(Number(num.value));
+    num.blur();
+  });
+
+  return {
+    update(angle) {
+      slider.value = angle;
+      num.value = angle;
+    },
+  };
+}
+
 function initGimbalPanel() {
+  const pan = bindAxisControl({
+    sliderId: 'gimbal-x-slider', numId: 'gimbal-x-num',
+    min: GIMBAL.x.min, max: GIMBAL.x.max, set: setGimbalX,
+  });
+  const tilt = bindAxisControl({
+    sliderId: 'gimbal-y-slider', numId: 'gimbal-y-num',
+    min: GIMBAL.y.min, max: GIMBAL.y.max, set: setGimbalY,
+  });
   onGimbalChange(({ x, y }) => {
-    $('gimbal-x').textContent = `${x}°`;
-    $('gimbal-y').textContent = `${y}°`;
+    pan.update(x);
+    tilt.update(y);
   });
 }
 
 function initArmPanel() {
-  onArmChange(({ angles, gripperClosed }) => {
-    $('arm-j7').textContent = `${angles.j7}°`;
-    $('arm-j8').textContent = `${angles.j8}°`;
-    $('arm-j9').textContent = `${angles.j9}°`;
-    $('gripper-state').textContent = gripperClosed ? 'CLOSED' : 'OPEN';
+  const controls = {};
+  for (const [key, j] of Object.entries(ARM.joints)) {
+    controls[key] = bindAxisControl({
+      sliderId: `arm-${key}-slider`, numId: `arm-${key}-num`,
+      min: j.min, max: j.max, set: (a) => setArmJoint(key, a),
+    });
+  }
+  onArmChange(({ angles }) => {
+    for (const key of Object.keys(controls)) controls[key].update(angles[key]);
   });
   onTelemetry('arm', ({ ok, raw }) => {
     // Response shape unverified until Phase 1 — render whatever came back.
@@ -178,8 +233,7 @@ function initLegend() {
     ['Drive', `${pretty(KEYS.motion.forward)}/${pretty(KEYS.motion.backward)} fwd/back · ${pretty(KEYS.motion.rotateLeft)}/${pretty(KEYS.motion.rotateRight)} rotate (hold)`],
     ['E-STOP', 'SPACE'],
     ['Gimbal', `${pretty(KEYS.gimbal.left)}/${pretty(KEYS.gimbal.right)}/${pretty(KEYS.gimbal.up)}/${pretty(KEYS.gimbal.down)} arrows · ${pretty(KEYS.gimbal.recenter)} recenter`],
-    ['Arm', `${pretty(KEYS.arm.j7Up)}/${pretty(KEYS.arm.j7Down)} j7 · ${pretty(KEYS.arm.j8Up)}/${pretty(KEYS.arm.j8Down)} j8 · ${pretty(KEYS.arm.j9Up)}/${pretty(KEYS.arm.j9Down)} j9`],
-    ['Gripper', `${pretty(KEYS.arm.gripperToggle)} toggle · ${pretty(KEYS.arm.home)} arm home`],
+    ['Arm', `${pretty(KEYS.arm.j7Up)}/${pretty(KEYS.arm.j7Down)} j7 · ${pretty(KEYS.arm.j8Up)}/${pretty(KEYS.arm.j8Down)} j8 · ${pretty(KEYS.arm.j9Up)}/${pretty(KEYS.arm.j9Down)} j9 (grip) · ${pretty(KEYS.arm.home)} home`],
   ];
   $('legend').innerHTML = rows
     .map(([k, v]) => `<div class="legend-row"><span class="legend-key">${k}</span><span>${v}</span></div>`)

@@ -18,7 +18,7 @@
 import { KEYS, MOTION } from './config.js';
 import { publishMotion, stopMotion } from './publishers/motion.js';
 import { stepGimbalX, stepGimbalY, recenterGimbal } from './publishers/gimbal.js';
-import { stepArmJoint, toggleGripper, armHome } from './publishers/arm.js';
+import { stepArmJoint, armHome } from './publishers/arm.js';
 import { onStatus } from './ros.js';
 
 const held = new Set();      // event.codes of currently held motion keys
@@ -82,13 +82,22 @@ function eStop() {
 
 const MOTION_CODES = new Set(Object.values(KEYS.motion));
 
+/** True when focus is in a form control (sliders, number inputs, selects) —
+ *  those keys belong to the control, not the robot. E-stop is exempt. */
+function inFormControl(e) {
+  const tag = e.target?.tagName;
+  return tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA';
+}
+
 function handleKeyDown(e) {
+  // E-stop first and unconditionally — works even while typing in an input.
   if (e.code === KEYS.eStop) {
     e.preventDefault();
     e.stopImmediatePropagation();
     eStop();
     return;
   }
+  if (inFormControl(e)) return;
   if (e.repeat && MOTION_CODES.has(e.code)) return; // held motion keys: loop handles it
 
   if (MOTION_CODES.has(e.code)) {
@@ -117,7 +126,6 @@ function handleKeyDown(e) {
     case a.j8Down: stepArmJoint('j8', -1); return;
     case a.j9Up: stepArmJoint('j9', +1); return;
     case a.j9Down: stepArmJoint('j9', -1); return;
-    case a.gripperToggle: if (!e.repeat) toggleGripper(); return;
     case a.home: if (!e.repeat) armHome(); return;
   }
 }

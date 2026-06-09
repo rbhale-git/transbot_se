@@ -78,9 +78,11 @@ export const MOTION = {
 // invertStep flips relative steps (keys/gamepad) when the servo's positive
 // direction doesn't match the operator's expectation. Absolute moves
 // (sliders, typed values, recenter) are unaffected.
+// Home pose chosen by the operator: pan 90, tilt 22. Reached via the C key
+// or the HOME button in the GIMBAL panel.
 export const GIMBAL = {
   x: { servoId: 1, min: 0, max: 180, home: 90, invertStep: true },  // pan (verified on robot: + angle pans the "wrong" way for arrow keys)
-  y: { servoId: 2, min: 0, max: 180, home: 90, invertStep: false }, // tilt
+  y: { servoId: 2, min: 0, max: 180, home: 22, invertStep: false }, // tilt
   stepDeg: 3,
 };
 

@@ -8,7 +8,7 @@ import {
 } from './config.js';
 import { connect, onStatus } from './ros.js';
 import { onMotionCommand } from './publishers/motion.js';
-import { onGimbalChange, setGimbalX, setGimbalY } from './publishers/gimbal.js';
+import { onGimbalChange, setGimbalX, setGimbalY, recenterGimbal } from './publishers/gimbal.js';
 import { onArmChange, setArmJoint, armHome } from './publishers/arm.js';
 import { initKeyboard, onEStop } from './keyboard.js';
 import { initTelemetry, onTelemetry } from './telemetry.js';
@@ -212,6 +212,10 @@ function initGimbalPanel() {
     const py = (1 - (y - GIMBAL.y.min) / (GIMBAL.y.max - GIMBAL.y.min)) * 100;
     dot.style.left = `${px}%`;
     dot.style.top = `${py}%`;
+  });
+  $('gimbal-home-btn').addEventListener('click', (e) => {
+    recenterGimbal();
+    e.target.blur(); // keep focus free for driving keys
   });
 }
 

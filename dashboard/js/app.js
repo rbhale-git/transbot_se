@@ -84,6 +84,9 @@ function initDrivePanel() {
     $('cmd-angular').textContent = fmt(angular);
     speedBar($('cmd-linear-bar'), linear, MOTION.linear.cap);
     speedBar($('cmd-angular-bar'), angular, MOTION.angular.cap);
+    // Mirror commanded velocity into the video HUD.
+    $('hud-lin').textContent = fmt(linear);
+    $('hud-ang').textContent = fmt(angular);
   });
 
   let lastVelAt = 0;
@@ -289,6 +292,7 @@ function initRecorderControls() {
     recBtn.classList.toggle('recording', recording);
     recBtn.textContent = recording ? `■ ${count}` : '● REC';
     saveBtn.disabled = recording || count === 0;
+    $('hud-rec').classList.toggle('hidden', !recording);
   });
 }
 
@@ -308,15 +312,17 @@ function initEStopBanner() {
 
 function initLegend() {
   const pretty = (code) => code.replace('Key', '').replace('Arrow', '');
+  const kbd = (code) => `<kbd>${pretty(code)}</kbd>`;
+  const m = KEYS.motion; const g = KEYS.gimbal; const a = KEYS.arm;
   const rows = [
-    ['Drive', `${pretty(KEYS.motion.forward)}/${pretty(KEYS.motion.backward)} fwd/back · ${pretty(KEYS.motion.rotateLeft)}/${pretty(KEYS.motion.rotateRight)} rotate (hold)`],
-    ['E-STOP', 'SPACE'],
-    ['Gimbal', `${pretty(KEYS.gimbal.left)}/${pretty(KEYS.gimbal.right)}/${pretty(KEYS.gimbal.up)}/${pretty(KEYS.gimbal.down)} arrows · ${pretty(KEYS.gimbal.recenter)} recenter`],
-    ['Arm', `${pretty(KEYS.arm.j7Up)}/${pretty(KEYS.arm.j7Down)} j7 · ${pretty(KEYS.arm.j8Up)}/${pretty(KEYS.arm.j8Down)} j8 · ${pretty(KEYS.arm.j9Up)}/${pretty(KEYS.arm.j9Down)} j9 (grip) · ${pretty(KEYS.arm.home)} home`],
+    ['Drive', `${kbd(m.forward)}${kbd(m.backward)} fwd/back · ${kbd(m.rotateLeft)}${kbd(m.rotateRight)} rotate (hold)`],
+    ['E-STOP', '<kbd class="kbd-estop">SPACE</kbd>'],
+    ['Gimbal', `${kbd(g.left)}${kbd(g.right)}${kbd(g.up)}${kbd(g.down)} step · ${kbd(g.recenter)} recenter`],
+    ['Arm', `${kbd(a.j7Up)}${kbd(a.j7Down)} j7 · ${kbd(a.j8Up)}${kbd(a.j8Down)} j8 · ${kbd(a.j9Up)}${kbd(a.j9Down)} grip · ${kbd(a.home)} home`],
     ['Pad', 'L-stick drive · R-stick gimbal · LT/RT grip · D-pad J7/J8 · B e-stop · A home'],
   ];
   $('legend').innerHTML = rows
-    .map(([k, v]) => `<div class="legend-row"><span class="legend-key">${k}</span><span>${v}</span></div>`)
+    .map(([k, v]) => `<div class="legend-row"><span class="legend-key">${k}</span><span class="legend-val">${v}</span></div>`)
     .join('');
 }
 

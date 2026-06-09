@@ -9,12 +9,15 @@
 <body>
 
   <!-- E-stop flash overlay -->
-  <div id="estop-banner" class="hidden">E-STOP &mdash; ZERO TWIST SENT</div>
+  <div id="estop-banner" class="hidden">
+    <span class="estop-text">E-STOP</span>
+    <span class="estop-sub">ZERO TWIST SENT</span>
+  </div>
 
   <header>
     <div class="brand">
       <span class="brand-mark">&#9650;</span>
-      <h1>TRANSBOT SE <span class="dim">// GROUND CONTROL</span></h1>
+      <h1>TRANSBOT&nbsp;SE <span class="dim">// GROUND CONTROL</span></h1>
     </div>
     <div class="header-right">
       <label class="profile">
@@ -36,11 +39,17 @@
   <main>
     <!-- Video pane -->
     <section class="panel video-panel" aria-label="camera">
-      <div class="panel-title">CAMERA</div>
+      <div class="panel-title"><span class="num">00</span>CAMERA</div>
       <div class="video-frame">
         <img id="video-stream" class="hidden" alt="robot camera stream">
         <div id="video-nosignal">
           <span>NO SIGNAL</span>
+        </div>
+        <!-- live HUD: commanded velocities + recording marker -->
+        <div class="hud">
+          <span class="hud-item">LIN <b id="hud-lin">0.00</b></span>
+          <span class="hud-item">ANG <b id="hud-ang">0.00</b></span>
+          <span class="hud-item hud-rec hidden" id="hud-rec">&#9679; REC</span>
         </div>
       </div>
     </section>
@@ -49,7 +58,7 @@
     <aside class="rail">
 
       <section id="drive-panel" class="panel" aria-label="drive">
-        <div class="panel-title">DRIVE</div>
+        <div class="panel-title"><span class="num">01</span>DRIVE</div>
         <div class="metric-grid">
           <div class="metric">
             <span class="metric-label">CMD LIN <span class="unit">m/s</span></span>
@@ -58,7 +67,7 @@
           </div>
           <div class="metric">
             <span class="metric-label">MEAS LIN <span class="unit">m/s</span></span>
-            <span class="metric-value" id="meas-linear">--</span>
+            <span class="metric-value meas" id="meas-linear">--</span>
             <div class="bar"><div class="bar-fill meas" id="meas-linear-bar"></div></div>
           </div>
           <div class="metric">
@@ -68,24 +77,24 @@
           </div>
           <div class="metric">
             <span class="metric-label">MEAS ANG <span class="unit">rad/s</span></span>
-            <span class="metric-value" id="meas-angular">--</span>
+            <span class="metric-value meas" id="meas-angular">--</span>
             <div class="bar"><div class="bar-fill meas" id="meas-angular-bar"></div></div>
           </div>
         </div>
       </section>
 
       <section id="power-panel" class="panel" aria-label="power">
-        <div class="panel-title">POWER</div>
+        <div class="panel-title"><span class="num">02</span>POWER</div>
         <div class="power-row">
           <span class="metric-value big" id="battery-voltage">--</span>
           <span class="unit">V</span>
           <span id="battery-warning" class="warning hidden">LOW BATTERY</span>
         </div>
-        <div class="bar"><div class="bar-fill batt" id="battery-bar"></div></div>
+        <div class="bar batt-bar"><div class="bar-fill batt" id="battery-bar"></div></div>
       </section>
 
       <section id="imu-panel" class="panel" aria-label="imu">
-        <div class="panel-title">IMU</div>
+        <div class="panel-title"><span class="num">03</span>IMU</div>
         <table class="data-table">
           <tr><th></th><th>X</th><th>Y</th><th>Z</th></tr>
           <tr><th>ACC</th><td id="imu-ax">--</td><td id="imu-ay">--</td><td id="imu-az">--</td></tr>
@@ -94,7 +103,7 @@
       </section>
 
       <section id="gimbal-panel" class="panel" aria-label="gimbal">
-        <div class="panel-title">GIMBAL</div>
+        <div class="panel-title"><span class="num">04</span>GIMBAL</div>
         <!-- min/max/step are filled from config.js at boot — no values here -->
         <div class="ctl">
           <div class="ctl-head">
@@ -115,7 +124,7 @@
       </section>
 
       <section id="arm-panel" class="panel" aria-label="arm">
-        <div class="panel-title">ARM</div>
+        <div class="panel-title"><span class="num">05</span>ARM</div>
         <div class="ctl">
           <div class="ctl-head">
             <span class="ctl-label">J7</span>
@@ -144,7 +153,7 @@
       </section>
 
       <section id="settings-panel" class="panel" aria-label="settings">
-        <div class="panel-title">SETTINGS</div>
+        <div class="panel-title"><span class="num">06</span>SETTINGS</div>
         <!-- rows are generated from SETTING_DEFS in settings.js -->
         <div id="settings-rows"></div>
       </section>

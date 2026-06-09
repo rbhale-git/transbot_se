@@ -41,15 +41,19 @@
     <section class="panel video-panel" aria-label="camera">
       <div class="panel-title"><span class="num">00</span>CAMERA</div>
       <div class="video-frame">
-        <img id="video-stream" class="hidden" alt="robot camera stream">
-        <div id="video-nosignal">
-          <span>NO SIGNAL</span>
-        </div>
-        <!-- live HUD: commanded velocities + recording marker -->
-        <div class="hud">
-          <span class="hud-item">LIN <b id="hud-lin">0.00</b></span>
-          <span class="hud-item">ANG <b id="hud-ang">0.00</b></span>
-          <span class="hud-item hud-rec hidden" id="hud-rec">&#9679; REC</span>
+        <!-- the stage locks to the stream's true aspect ratio, so the bezel,
+             brackets, and HUD always hug the actual picture -->
+        <div class="video-stage">
+          <img id="video-stream" class="hidden" alt="robot camera stream">
+          <div id="video-nosignal">
+            <span>NO SIGNAL</span>
+          </div>
+          <!-- live HUD: commanded velocities + recording marker -->
+          <div class="hud">
+            <span class="hud-item">LIN <b id="hud-lin">0.00</b></span>
+            <span class="hud-item">ANG <b id="hud-ang">0.00</b></span>
+            <span class="hud-item hud-rec hidden" id="hud-rec">&#9679; REC</span>
+          </div>
         </div>
       </div>
     </section>

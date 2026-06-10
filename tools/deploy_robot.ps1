@@ -26,6 +26,14 @@ scp (Join-Path $repoRoot "robot\transbot_dashboard.launch") `
     "${target}:~/transbot_dashboard/"
 if ($LASTEXITCODE -ne 0) { Write-Host "scp failed" -ForegroundColor Red; exit 1 }
 
+Write-Host "Copying safety nodes into transbot_bringup/scripts..."
+scp (Join-Path $repoRoot "robot\cmd_vel_watchdog.py") `
+    (Join-Path $repoRoot "robot\cmd_vel_mux.py") `
+    "${target}:~/transbot_ws/src/transbot_bringup/scripts/"
+if ($LASTEXITCODE -ne 0) { Write-Host "scp failed" -ForegroundColor Red; exit 1 }
+ssh $target "chmod +x ~/transbot_ws/src/transbot_bringup/scripts/cmd_vel_watchdog.py ~/transbot_ws/src/transbot_bringup/scripts/cmd_vel_mux.py"
+if ($LASTEXITCODE -ne 0) { Write-Host "chmod failed" -ForegroundColor Red; exit 1 }
+
 Write-Host ""
 Write-Host "Deployed. Start the stack on the robot with:" -ForegroundColor Green
 Write-Host "    ssh $target"

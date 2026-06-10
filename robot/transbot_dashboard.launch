@@ -52,4 +52,11 @@
        transbot_bringup/scripts/ so roslaunch can resolve it. -->
   <node name="cmd_vel_watchdog" pkg="transbot_bringup" type="cmd_vel_watchdog.py"
         output="screen" respawn="true" respawn_delay="5" />
+
+  <!-- 6. SAFETY: command-priority mux. Sole publisher to /cmd_vel: forwards
+       /manual/cmd_vel (dashboard) always, /ai/cmd_vel only while /ai/enabled
+       and manual is quiet, clamped to the AI speed caps. Deployed into
+       transbot_bringup/scripts/ like the watchdog. -->
+  <node name="cmd_vel_mux" pkg="transbot_bringup" type="cmd_vel_mux.py"
+        output="screen" respawn="true" respawn_delay="5" />
 </launch>

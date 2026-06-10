@@ -92,8 +92,21 @@ sudo nmcli con up Transbot    # start the hotspot AP
       ws://192.168.0.109:9090 / :8080 (home Wi-Fi profile)
 - [x] Phase 3 — dashboard built and tested against the mock (which mirrors
       the verified interface)
-- [ ] Phase 4 — test and safety pass on the real robot
-- [ ] Phase 5 — docs (architecture/config/extending sections already drafted)
+- [x] Phase 4 — test and safety pass on the real robot complete; checklist
+      and results below
+- [x] Phase 5 — docs
+
+## Quick start (real robot)
+
+1. Power the robot on. Everything robot-side autostarts via systemd
+   (driver + camera + web_video_server + rosbridge); ~2 minutes to ready.
+   The OLED shows which network it landed on (home Wi-Fi, or its own
+   `Transbot` hotspot when home Wi-Fi isn't reachable).
+2. On the laptop: `python tools/serve_dashboard.py`, open
+   http://localhost:8000, pick the matching NET profile (HOME WIFI or
+   ROBOT HOTSPOT). The lamp goes green and the camera feed appears.
+3. VPNs (e.g. NordVPN) must be off or configured to allow LAN traffic, or
+   the link will drop.
 
 ## Running the dashboard (mock mode, no robot needed)
 
@@ -103,8 +116,9 @@ Two terminals from the repo root:
 # 1. mock rosbridge server (simulated driver telemetry on ws://localhost:9090)
 python mock/mock_rosbridge.py
 
-# 2. static server for the dashboard
-python -m http.server 8000 --directory dashboard
+# 2. static server for the dashboard (sends no-cache headers — required so
+#    browser-cached ES modules can never mix old and new code)
+python tools/serve_dashboard.py
 ```
 
 Open http://localhost:8000 and make sure the NET profile is `MOCK (local sim)`.
@@ -121,16 +135,30 @@ Protocol self-test for the mock: `python mock/selftest.py` (mock must be running
 | --- | --- |
 | W / S (hold) | drive forward / back |
 | A / D (hold) | rotate left / right (combinable with W/S) |
-| SPACE | e-stop — immediate zero Twist, highest priority |
-| Arrow keys | gimbal pan/tilt step, C recenter |
+| SPACE | e-stop — immediate zero Twist, highest priority, works from any focus |
+| Arrow keys | gimbal pan/tilt step, C = gimbal home (pan 90°, tilt 22°) |
 | U/J, I/K, O/L | arm joints 7 / 8 / 9 step (J9 is the gripper joint) |
-| H | arm home pose |
+| H | arm home pose (J7 225°, J8 30°, J9 30°) |
 
 The gimbal and arm panels also have a slider plus a numeric entry field per
 axis (type a value and press Enter). All five axes — pan, tilt, J7, J8, and
 the gripper joint J9 — are continuous; ranges come from `config.js` and every
 value is clamped before publishing. Keyboard steps, sliders, and typed values
 all stay in sync.
+
+### Pose buttons
+
+| Button | Pose | Behavior |
+| --- | --- | --- |
+| GIMBAL HOME | pan 90°, tilt 22° | same path as the C key |
+| ARM HOME | J7 225°, J8 30°, J9 30° | all joints, including gripper |
+| ARM READY | J7 110°, J8 175°, J9 30° | staged: J8 leads, J7+J9 start after ~5° of J8 travel |
+| ARM STOW | J7 225°, J8 30° | gripper (J9) stays where it is — holds its grip |
+
+Multi-joint poses send one command per joint, paced 150 ms apart (the vendor
+driver drops commands that arrive back-to-back), then poll `/CurrentAngle`
+once and re-send any joint more than 8° off target. Pose sequences abort on
+e-stop or when superseded by another pose.
 
 ### Gamepad (standard-mapping controller, e.g. Xbox)
 
@@ -158,6 +186,27 @@ lights when a controller is detected (press any button to wake it).
   telemetry message, and service response with timestamps; SAVE downloads a
   JSONL file. This is the evidence trail for the Phase 4 safety pass.
 
+## Phase 4 — test & safety pass (results)
+
+Performed 2026-06-09/10 with the robot on a stand, tracks clear, against the
+live robot over home Wi-Fi. All items **PASS**:
+
+| # | Test | Result |
+| --- | --- | --- |
+| 1 | Drive (W/S/A/D + diagonals); CMD vs MEAS track in the DRIVE panel | PASS |
+| 2 | Range clamps — out-of-range typed values clamp to configured limits | PASS |
+| 3 | Deadman: key release stops the robot immediately | PASS |
+| 4 | Deadman: tab blur / focus loss stops the robot | PASS |
+| 5 | E-stop (SPACE) mid-drive: instant zero-Twist burst + banner, including with focus in an input field | PASS |
+| 6 | Gimbal arrows/sliders/home; arm steps, sliders, HOME / READY / STOW poses with staging and verify-resend | PASS (after pacing fix — see commit history: vendor driver drops back-to-back arm commands) |
+| 7 | **Stop-on-disconnect:** Wi-Fi cut mid-drive → robot stops on its own | PASS |
+| 8 | Reconnect: link restored → lamp recovers automatically; previously held keys do NOT resume motion | PASS |
+
+Notes from testing: gimbal pan stepping was direction-inverted on the real
+robot (fixed via `invertStep` config); the factory app held the camera
+exclusively (replaced by our own stack, see below); multi-joint arm commands
+needed pacing + verification to be reliable.
+
 ## Robot-day tooling (Phases 0–2, prepared in advance)
 
 ```powershell
@@ -183,7 +232,7 @@ reads them from config, so fixes land in one place.
 | `TOPICS` | name + message type per topic | `/cmd_vel` verified (ROS standard); `/PWMServo`, `/TargetAngle`, telemetry topics TO-VERIFY |
 | `SERVICES` | `/CurrentAngle` (TO-VERIFY), `/rosapi/get_time` | latter ships with rosbridge |
 | `MOTION` | `hardMax` (driver limits, never exceeded) and `cap` (operating limit) per axis | caps are live-tunable in SETTINGS, clamped to `hardMax` |
-| `GIMBAL` / `ARM` | servo ids, ranges, home angles, step sizes, arm `run_time` | ranges from the brief, TO-VERIFY |
+| `GIMBAL` / `ARM` | servo ids, ranges, home angles (operator-tuned), step sizes, `invertStep` per axis, arm `run_time`, `interCommandMs` + `verifyToleranceDeg` (pose pacing/repair), `readyPose` (staged deploy) | verified on the robot |
 | `POWER` | low-voltage warning threshold | 9.9 V for the 3S pack, TO-VERIFY |
 | `KEYS` | every key binding (`event.code` values) | legend renders from this, so docs can't drift |
 | `GAMEPAD` | deadzone, rates, button mapping | standard-mapping layout |

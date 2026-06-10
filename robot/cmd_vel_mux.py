@@ -51,7 +51,7 @@ class MuxCore(object):
         self.armed = False
         self._last_manual = None
         self._last_ai = None
-        self._ai_active = False   # AI is the current source of /cmd_vel
+        self._ai_active = False   # AI is the current publisher to /cmd_vel (may be commanding zeros)
 
     def _manual_recent(self, now):
         return (self._last_manual is not None
@@ -84,13 +84,20 @@ class MuxCore(object):
 
     def check_timeout(self, now):
         """True once when AI goes silent while it was driving."""
-        if (self._ai_active and self._last_ai is not None
-                and (now - self._last_ai) > self.ai_timeout_s):
-            self._ai_active = False
-            return True
+        if self._ai_active and self._last_ai is not None:
+            if now < self._last_ai:
+                # Clock stepped backward (robot has no RTC; NTP can jump).
+                # Restart the timeout window from now so the guard stays
+                # fail-safe rather than never firing.
+                self._last_ai = now
+                return False
+            if (now - self._last_ai) > self.ai_timeout_s:
+                self._ai_active = False
+                return True
         return False
 
     def status(self, now):
+        """Status dict for /mux/status. Note: 'ai' persists until check_timeout() observes silence -- callers must drive check_timeout() periodically (the node's 10 Hz timer does)."""
         if self._manual_recent(now):
             source = "manual"
         elif self._ai_active:
@@ -119,30 +126,30 @@ def run_node():
     def on_manual(msg):
         with lock:
             core.on_manual(msg.linear.x, msg.angular.z, now_s())
-        pub.publish(msg)   # forwarded verbatim - manual is never modified
+            pub.publish(msg)   # forwarded verbatim - manual is never modified
 
     def on_ai(msg):
         with lock:
             out = core.on_ai(msg.linear.x, msg.angular.z, now_s())
-        if out is None:
-            return
-        fwd = Twist()
-        fwd.linear.x, fwd.angular.z = out
-        pub.publish(fwd)
+            if out is None:
+                return
+            fwd = Twist()
+            fwd.linear.x, fwd.angular.z = out
+            pub.publish(fwd)
 
     def on_enabled(msg):
         with lock:
             halt = core.set_armed(msg.data, now_s())
-        rospy.loginfo("ai %s", "ARMED" if msg.data else "disarmed")
-        if halt:
-            pub.publish(Twist())   # all zeros
+            rospy.loginfo("ai %s", "ARMED" if msg.data else "disarmed")
+            if halt:
+                pub.publish(Twist())   # all zeros
 
     def on_check(_event):
         with lock:
             halt = core.check_timeout(now_s())
-        if halt:
-            rospy.logwarn("ai input went silent while driving - stopping")
-            pub.publish(Twist())
+            if halt:
+                rospy.logwarn("ai input went silent while driving - stopping")
+                pub.publish(Twist())
 
     def on_status(_event):
         with lock:

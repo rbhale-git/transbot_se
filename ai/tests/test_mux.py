@@ -84,3 +84,22 @@ def test_status_shape():
         "armed": False,
         "caps": {"fwd": 0.25, "rev": 0.12, "ang": 1.2},
     }
+
+
+def test_clock_jump_backward_restarts_ai_timeout_window():
+    core = make()
+    core.set_armed(True, now=100.0)
+    core.on_ai(0.1, 0.0, now=100.0)
+    assert core.check_timeout(now=50.0) is False   # backward jump: window restarts
+    assert core.check_timeout(now=50.3) is False   # fresh window, still fresh
+    assert core.check_timeout(now=50.6) is True    # >0.5s after restart: fires
+
+
+def test_rearm_after_disarm_allows_ai_again():
+    core = make()
+    core.set_armed(True, now=0.0)
+    core.on_ai(0.1, 0.0, now=0.0)
+    core.set_armed(False, now=0.1)
+    core.set_armed(True, now=0.2)
+    assert core.on_ai(0.1, 0.0, now=0.3) == (0.1, 0.0)
+    assert core.status(now=0.3)["source"] == "ai"

@@ -1,0 +1,5 @@
+# AI behaviors run on the laptop (Python 3.13); the robot is untouched.
+opencv-python>=4.10
+roslibpy>=1.7
+numpy>=2.0
+pytest>=8.0

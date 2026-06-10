@@ -37,8 +37,10 @@ export const DEFAULT_PROFILE = 'mock';
 // ---- Topics and services ---------------------------------------------------
 // `verified: false` => type/name is a hint, not discovery-confirmed.
 export const TOPICS = {
-  // Drive. Subscribed by /transbot_node (the driver).
-  cmdVel: { name: '/cmd_vel', type: 'geometry_msgs/Twist', verified: true },
+  // Drive. Published to /manual/cmd_vel; the robot-side cmd_vel_mux forwards
+  // it to /cmd_vel (manual always wins over AI). Requires the stage-2 robot
+  // stack — an old robot image without the mux will not hear the dashboard.
+  cmdVel: { name: '/manual/cmd_vel', type: 'geometry_msgs/Twist', verified: true },
 
   // Camera gimbal: {int32 id, int32 angle}, id 1 = pan, 2 = tilt.
   pwmServo: { name: '/PWMServo', type: 'transbot_msgs/PWMServo', verified: true },
@@ -54,6 +56,11 @@ export const TOPICS = {
   battery: { name: '/voltage', type: 'transbot_msgs/Battery', verified: true },
   // Published once per captured frame by usb_cam — used as the FPS meter.
   cameraInfo: { name: '/usb_cam/camera_info', type: 'sensor_msgs/CameraInfo', verified: true },
+
+  // AI arbitration (stage 2). aiEnabled is latched robot-side by the mux.
+  aiEnabled: { name: '/ai/enabled', type: 'std_msgs/Bool', verified: true },
+  muxStatus: { name: '/mux/status', type: 'std_msgs/String', verified: true },
+  aiStatus: { name: '/ai/status', type: 'std_msgs/String', verified: true },
 };
 
 export const SERVICES = {

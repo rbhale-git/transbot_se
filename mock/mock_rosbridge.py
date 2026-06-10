@@ -38,6 +38,7 @@ state = {
     "arm": {7: 110, 8: 150, 9: 90},
     "battery": 12.4,
     "t0": time.monotonic(),
+    "ai_armed": False,
 }
 
 CMD_STALE_S = 0.4  # measured velocity decays to 0 if no cmd_vel within this
@@ -51,11 +52,14 @@ def log(direction: str, text: str) -> None:
 # Inbound message handling
 # ---------------------------------------------------------------------------
 def handle_publish(topic: str, msg: dict) -> None:
-    if topic == "/cmd_vel":
+    if topic in ("/cmd_vel", "/manual/cmd_vel"):
         lin = float(msg.get("linear", {}).get("x", 0.0))
         ang = float(msg.get("angular", {}).get("z", 0.0))
         state["last_cmd"] = {"linear": lin, "angular": ang, "at": time.monotonic()}
-        log("RECV", f"/cmd_vel        lin={lin:+.3f} m/s  ang={ang:+.3f} rad/s")
+        log("RECV", f"{topic:<16} lin={lin:+.3f} m/s  ang={ang:+.3f} rad/s")
+    elif topic == "/ai/enabled":
+        state["ai_armed"] = bool(msg.get("data"))
+        log("RECV", f"/ai/enabled     armed={state['ai_armed']}")
     elif topic == "/PWMServo":
         sid, angle = msg.get("id"), msg.get("angle")
         if sid in (1, 2):
@@ -134,6 +138,18 @@ def gen_camera_info() -> dict:
     return {"width": 640, "height": 480}
 
 
+def gen_mux_status() -> dict:
+    # Mirrors robot/cmd_vel_mux.py status: who is driving + armed + AI caps.
+    cmd = state["last_cmd"]
+    fresh = (time.monotonic() - cmd["at"]) < 1.0
+    payload = {
+        "source": "manual" if fresh else "none",
+        "armed": state["ai_armed"],
+        "caps": {"fwd": 0.25, "rev": 0.12, "ang": 1.2},
+    }
+    return {"data": json.dumps(payload)}
+
+
 # topic -> (message generator, publish period in seconds)
 # Topic names mirror the real robot (FINDINGS.md); /imu/data is the filtered IMU.
 TELEMETRY = {
@@ -141,6 +157,7 @@ TELEMETRY = {
     "/imu/data": (gen_imu, 0.2),
     "/voltage": (gen_battery, 1.0),
     "/usb_cam/camera_info": (gen_camera_info, 1 / 30),
+    "/mux/status": (gen_mux_status, 0.5),
 }
 
 

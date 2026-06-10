@@ -152,8 +152,9 @@
           <input type="range" id="arm-j9-slider" class="ctl-slider">
         </div>
         <div class="btn-row">
-          <button id="arm-home-btn" class="panel-btn" title="send all joints to the stow pose (same as H key)">&#8962; HOME</button>
-          <button id="arm-ready-btn" class="panel-btn" title="staged deploy: J7 leads, J8+J9 follow after 20&deg; of J7 travel">&#9670; READY</button>
+          <button id="arm-home-btn" class="panel-btn" title="all joints to home, including the gripper (same as H key)">&#8962; HOME</button>
+          <button id="arm-ready-btn" class="panel-btn" title="staged deploy: J8 leads, J7+J9 follow">&#9670; READY</button>
+          <button id="arm-stow-btn" class="panel-btn" title="J7+J8 to home; gripper (J9) stays where it is">&#9650; STOW</button>
         </div>
         <div class="kv stacked"><span>CURRENT (svc)</span><code id="arm-current" class="dim small">--</code></div>
       </section>

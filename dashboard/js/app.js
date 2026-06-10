@@ -10,7 +10,7 @@ import { connect, onStatus } from './ros.js';
 import { onMotionCommand } from './publishers/motion.js';
 import { onGimbalChange, setGimbalX, setGimbalY, recenterGimbal } from './publishers/gimbal.js';
 import {
-  onArmChange, setArmJoint, armHome, armReady, cancelArmSequence,
+  onArmChange, setArmJoint, armHome, armReady, armStow, cancelArmSequence,
 } from './publishers/arm.js';
 import { initKeyboard, onEStop } from './keyboard.js';
 import { initTelemetry, onTelemetry } from './telemetry.js';
@@ -241,6 +241,10 @@ function initArmPanel() {
   });
   $('arm-ready-btn').addEventListener('click', (e) => {
     armReady();
+    e.target.blur();
+  });
+  $('arm-stow-btn').addEventListener('click', (e) => {
+    armStow();
     e.target.blur();
   });
   onTelemetry('arm', ({ ok, raw }) => {

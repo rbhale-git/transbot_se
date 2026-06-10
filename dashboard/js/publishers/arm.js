@@ -120,6 +120,15 @@ export function armHome() {
   runPose(angles);
 }
 
+/** Like armHome, but leaves the gripper (J9) wherever it is. */
+export function armStow() {
+  const angles = {};
+  for (const [key, j] of Object.entries(ARM.joints)) {
+    if (key !== 'j9') angles[key] = j.home;
+  }
+  runPose(angles);
+}
+
 /**
  * Staged READY pose: the lead joint moves first in one normal-speed command;
  * followers start once it has covered followAfterDeg (estimated from

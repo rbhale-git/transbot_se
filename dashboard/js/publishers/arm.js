@@ -36,10 +36,10 @@ function notify() {
 /** Verified: transbot_msgs/Arm = {joint: [{id, run_time, angle}]}. */
 function buildArmMessage(moves) {
   return {
-    joint: moves.map(({ servoId, angleDeg }) => ({
+    joint: moves.map(({ servoId, angleDeg, runTimeMs }) => ({
       id: servoId,
       angle: Math.round(angleDeg),
-      run_time: ARM.runTimeMs,
+      run_time: runTimeMs ?? ARM.runTimeMs,
     })),
   };
 }
@@ -55,11 +55,11 @@ export function stepArmJoint(jointKey, direction) {
 }
 
 /** Set one joint to an absolute angle (sliders / typed values). */
-export function setArmJoint(jointKey, angleDeg) {
+export function setArmJoint(jointKey, angleDeg, runTimeMs = undefined) {
   const j = ARM.joints[jointKey];
   if (!j || !Number.isFinite(angleDeg)) return;
   state[jointKey] = clamp(angleDeg, j.min, j.max);
-  publishJoints([{ servoId: j.servoId, angleDeg: state[jointKey] }]);
+  publishJoints([{ servoId: j.servoId, angleDeg: state[jointKey], runTimeMs }]);
   notify();
 }
 
@@ -78,38 +78,9 @@ export function cancelArmSequence() {
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function runPose(angles, { leadJoint = null, followAfterDeg = 0 } = {}) {
-  cancelArmSequence();
-  const seq = activeSeq;
-
-  const keys = Object.keys(ARM.joints).filter((k) => k in angles);
-  const order = leadJoint
-    ? [leadJoint, ...keys.filter((k) => k !== leadJoint)]
-    : keys;
-  const leadStartDeg = leadJoint ? state[leadJoint] : 0;
-
-  for (let i = 0; i < order.length; i++) {
-    if (seq !== activeSeq) return; // cancelled (e-stop / newer pose)
-    const key = order[i];
-
-    if (i === 1 && leadJoint) {
-      // Staging: followers start once the lead has covered followAfterDeg,
-      // estimated from run_time (driver interpolates moves over run_time).
-      const delta = Math.abs(state[leadJoint] - leadStartDeg);
-      const fraction = delta > 0 ? Math.min(1, followAfterDeg / delta) : 0;
-      const stageDelay = Math.round(ARM.runTimeMs * fraction);
-      await wait(Math.max(stageDelay, ARM.interCommandMs));
-      if (seq !== activeSeq) return;
-    }
-
-    setArmJoint(key, angles[key]);
-    if (i < order.length - 1 && !(i === 0 && leadJoint)) {
-      await wait(ARM.interCommandMs); // pacing so the driver keeps every command
-    }
-  }
-
-  // Verify once after the move settles; re-send anything the driver dropped.
-  await wait(ARM.runTimeMs + 300);
+/** One verification pass: poll /CurrentAngle and re-send any joint that the
+ *  driver dropped (off target by more than verifyToleranceDeg). */
+async function verifyAndRepair(seq, keys) {
   if (seq !== activeSeq || !isConnected()) return;
   try {
     const resp = await callService(SERVICES.currentAngle, { apply: 'GetJoint' });
@@ -126,6 +97,22 @@ async function runPose(angles, { leadJoint = null, followAfterDeg = 0 } = {}) {
   } catch { /* verification is best-effort; never throws into the UI */ }
 }
 
+/** Paced multi-joint pose: one command per joint, interCommandMs apart. */
+async function runPose(angles) {
+  cancelArmSequence();
+  const seq = activeSeq;
+  const keys = Object.keys(ARM.joints).filter((k) => k in angles);
+
+  for (const key of keys) {
+    if (seq !== activeSeq) return; // cancelled (e-stop / newer pose)
+    setArmJoint(key, angles[key]);
+    await wait(ARM.interCommandMs); // pacing so the driver keeps every command
+  }
+
+  await wait(ARM.runTimeMs + 300); // let the move settle
+  await verifyAndRepair(seq, keys);
+}
+
 /** Send all joints to the configured safe neutral pose (paced + verified). */
 export function armHome() {
   const angles = {};
@@ -133,8 +120,52 @@ export function armHome() {
   runPose(angles);
 }
 
-/** Staged READY pose: lead joint first, followers after followAfterDeg. */
-export function armReady() {
-  const { angles, leadJoint, followAfterDeg } = ARM.readyPose;
-  runPose(angles, { leadJoint, followAfterDeg });
+/**
+ * Staged READY pose. The lead joint's travel is split in two segments:
+ *   1. normal speed for the first followAfterDeg degrees,
+ *   2. then re-commanded to the final target at leadSlowFactor speed
+ *      (run_time stretched by 1/leadSlowFactor),
+ * with the followers starting at the split point, paced apart.
+ */
+export async function armReady() {
+  cancelArmSequence();
+  const seq = activeSeq;
+  const { angles, leadJoint, followAfterDeg, leadSlowFactor } = ARM.readyPose;
+  const keys = Object.keys(ARM.joints).filter((k) => k in angles);
+  const followers = keys.filter((k) => k !== leadJoint);
+
+  const j = ARM.joints[leadJoint];
+  const start = state[leadJoint];
+  const target = clamp(angles[leadJoint], j.min, j.max);
+  const delta = Math.abs(target - start);
+
+  let settleMs = ARM.runTimeMs;
+  if (delta <= followAfterDeg) {
+    // Already within the staging distance — single normal-speed command.
+    setArmJoint(leadJoint, target);
+    await wait(ARM.interCommandMs);
+  } else {
+    // Segment 1: normal speed to the split point.
+    const dir = Math.sign(target - start);
+    const mid = start + dir * followAfterDeg;
+    const t1 = Math.round(ARM.runTimeMs * (followAfterDeg / delta));
+    setArmJoint(leadJoint, mid, t1);
+    await wait(Math.max(t1, ARM.interCommandMs));
+    if (seq !== activeSeq) return;
+
+    // Segment 2: remaining travel at reduced speed.
+    const t2 = Math.round((ARM.runTimeMs * ((delta - followAfterDeg) / delta)) / leadSlowFactor);
+    setArmJoint(leadJoint, target, t2);
+    settleMs = t2;
+    await wait(ARM.interCommandMs);
+  }
+
+  for (const key of followers) {
+    if (seq !== activeSeq) return;
+    setArmJoint(key, angles[key]);
+    await wait(ARM.interCommandMs);
+  }
+
+  await wait(Math.max(settleMs, ARM.runTimeMs) + 300);
+  await verifyAndRepair(seq, keys);
 }

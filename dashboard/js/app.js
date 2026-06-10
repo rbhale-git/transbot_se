@@ -14,8 +14,8 @@ import {
 } from './publishers/arm.js';
 import { initKeyboard, onEStop } from './keyboard.js';
 import { initTelemetry, onTelemetry } from './telemetry.js';
-import { initVideo, setVideoUrl } from './video.js';
-import { loadSettings, applySetting, SETTING_DEFS } from './settings.js';
+import { initVideo, setVideoUrl, kickVideo } from './video.js';
+import { loadSettings, applySetting, resetSettings, SETTING_DEFS } from './settings.js';
 import { initGamepad, onPadStatus } from './gamepad.js';
 import { initLatency, onLatency } from './latency.js';
 import {
@@ -68,6 +68,9 @@ function initStatusLamp() {
       : status === 'connecting' ? 'CONNECTING'
       : 'LINK DOWN';
     document.body.classList.toggle('link-down', status !== 'connected');
+    // MJPEG streams can end silently when the robot stack restarts; the
+    // bridge and video server live together, so reconnect = re-kick video.
+    if (status === 'connected') kickVideo();
   });
 }
 
@@ -273,6 +276,7 @@ function initArmPanel() {
 function initSettingsPanel() {
   loadSettings();
   const host = $('settings-rows');
+  const ctls = {};
   for (const [key, def] of Object.entries(SETTING_DEFS)) {
     const row = document.createElement('div');
     row.className = 'ctl';
@@ -292,7 +296,13 @@ function initSettingsPanel() {
       set: (v) => ctl.update(applySetting(key, v)),
     });
     ctl.update(def.get());
+    ctls[key] = ctl;
   }
+  $('settings-reset-btn').addEventListener('click', (e) => {
+    resetSettings();
+    for (const [key, def] of Object.entries(SETTING_DEFS)) ctls[key].update(def.get());
+    e.target.blur(); // keep focus free for driving keys
+  });
 }
 
 // ---- Header widgets: gamepad indicator, RTT, recorder ----------------------------

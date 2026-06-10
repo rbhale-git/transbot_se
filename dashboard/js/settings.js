@@ -43,6 +43,11 @@ export const SETTING_DEFS = {
   },
 };
 
+// Pristine config values, captured at import time — before loadSettings()
+// applies any persisted overrides. These are what "reset to defaults" restores.
+const DEFAULTS = {};
+for (const [key, def] of Object.entries(SETTING_DEFS)) DEFAULTS[key] = def.get();
+
 function persist() {
   const out = {};
   for (const [key, def] of Object.entries(SETTING_DEFS)) out[key] = def.get();
@@ -57,6 +62,12 @@ export function applySetting(key, value) {
   def.set(v);
   persist();
   return v;
+}
+
+/** Restore every setting to its config.js default value. */
+export function resetSettings() {
+  for (const [key, def] of Object.entries(SETTING_DEFS)) def.set(DEFAULTS[key]);
+  persist();
 }
 
 /** Restore persisted settings at boot (silently ignores bad data). */

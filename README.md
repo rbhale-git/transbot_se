@@ -199,8 +199,18 @@ live robot over home Wi-Fi. All items **PASS**:
 | 4 | Deadman: tab blur / focus loss stops the robot | PASS |
 | 5 | E-stop (SPACE) mid-drive: instant zero-Twist burst + banner, including with focus in an input field | PASS |
 | 6 | Gimbal arrows/sliders/home; arm steps, sliders, HOME / READY / STOW poses with staging and verify-resend | PASS (after pacing fix — see commit history: vendor driver drops back-to-back arm commands) |
-| 7 | **Stop-on-disconnect:** Wi-Fi cut mid-drive → robot stops on its own | PASS |
+| 7 | **Stop-on-disconnect:** Wi-Fi cut mid-drive → robot stops on its own | PASS — but see the field amendment below |
 | 8 | Reconnect: link restored → lamp recovers automatically; previously held keys do NOT resume motion | PASS |
+
+**Field amendment (post-pass):** a *degrading* link (silent TCP blackhole, as
+opposed to the clean socket close the test produced) did NOT stop the robot —
+the driver executes the last command forever and rosbridge still believed a
+client was attached. Fixed with `robot/cmd_vel_watchdog.py` (deployed into
+`transbot_bringup/scripts/`, launched with the stack, respawning): if
+`/cmd_vel` goes silent for 0.5 s while the last command was non-zero, it
+publishes a zero-Twist burst. Normal 10 Hz driving never triggers it. This
+watchdog protects against link degradation, browser crashes, and laptop
+sleep — independent of the dashboard.
 
 Notes from testing: gimbal pan stepping was direction-inverted on the real
 robot (fixed via `invertStep` config); the factory app held the camera

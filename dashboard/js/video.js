@@ -49,8 +49,14 @@ function showNoSignal(on) {
 function scheduleRetry() {
   clearTimeout(retryTimer);
   if (!currentUrl) return;
-  retryTimer = setTimeout(() => {
-    // Cache-bust so the browser actually re-attempts the stream.
-    imgEl.src = currentUrl + (currentUrl.includes('?') ? '&' : '?') + 'retry=' + Date.now();
-  }, RETRY_MS);
+  retryTimer = setTimeout(kickVideo, RETRY_MS);
+}
+
+/** Force the stream to reconnect. MJPEG streams can END without firing an
+ *  error event (e.g. the robot-side server restarts), leaving a frozen pane
+ *  with no retry scheduled — callers kick on rosbridge reconnect. */
+export function kickVideo() {
+  if (!currentUrl) return;
+  // Cache-bust so the browser actually re-attempts the stream.
+  imgEl.src = currentUrl + (currentUrl.includes('?') ? '&' : '?') + 'retry=' + Date.now();
 }

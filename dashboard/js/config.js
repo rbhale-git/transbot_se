@@ -120,8 +120,8 @@ export const ARM = {
   // joint progress fast enough to track it live).
   readyPose: {
     angles: { j7: 110, j8: 175, j9: 30 },
-    leadJoint: 'j7',
-    followAfterDeg: 5,   // tuned on the robot: J8/J9 start after 5° of J7 travel
+    leadJoint: 'j8',
+    followAfterDeg: 5,   // tuned on the robot: J7/J9 start after 5° of J8 travel
   },
 };
 

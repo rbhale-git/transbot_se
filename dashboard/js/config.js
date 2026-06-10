@@ -121,7 +121,7 @@ export const ARM = {
   readyPose: {
     angles: { j7: 115, j8: 175, j9: 30 },
     leadJoint: 'j7',
-    followAfterDeg: 25, // tuned on the robot: J8/J9 start after 25° of J7 travel
+    followAfterDeg: 15, // tuned on the robot: J8/J9 start after 15° of J7 travel
   },
 };
 

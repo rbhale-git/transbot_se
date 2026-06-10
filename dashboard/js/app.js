@@ -22,6 +22,7 @@ import {
   initRecorder, onRecorderChange, startRecording, stopRecording,
   isRecording, downloadRecording,
 } from './recorder.js';
+import { initAiPanel } from './ai_panel.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -391,6 +392,7 @@ initPowerWidget();
 initGimbalPanel();
 initArmPanel();
 initSettingsPanel();
+initAiPanel();
 initPadIndicator();
 initLatencyReadout();
 initRecorderControls();

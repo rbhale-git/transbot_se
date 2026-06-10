@@ -166,6 +166,14 @@
         <button id="settings-reset-btn" class="panel-btn" title="restore all settings to config defaults">&#8635; RESET DEFAULTS</button>
       </section>
 
+      <section id="ai-panel" class="panel" aria-label="ai">
+        <div class="panel-title"><span class="num">05</span>AI</div>
+        <button id="ai-arm-btn" class="panel-btn" title="allow AI behaviors to drive the chassis (robot-side mux enforces caps; joystick always overrides)">&#9655; ARM AI</button>
+        <div class="kv"><span>DRIVE SRC</span><code id="ai-source" class="dim">--</code></div>
+        <div class="kv"><span>AI ARMED</span><code id="ai-armed" class="dim">--</code></div>
+        <div class="kv"><span>BEHAVIOR</span><code id="ai-behavior" class="dim small">--</code></div>
+      </section>
+
     </aside>
   </main>
 

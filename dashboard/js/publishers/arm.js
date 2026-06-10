@@ -11,8 +11,8 @@
 // Joint = {int32 id, int32 run_time, float32 angle} — see FINDINGS.md.
 // ============================================================================
 
-import { TOPICS, ARM, clamp } from '../config.js';
-import { publish } from '../ros.js';
+import { TOPICS, SERVICES, ARM, clamp } from '../config.js';
+import { publish, callService, isConnected } from '../ros.js';
 
 // Commanded joint angles (degrees), keyed j7/j8/j9. Start at home pose.
 const state = {};
@@ -63,49 +63,78 @@ export function setArmJoint(jointKey, angleDeg) {
   notify();
 }
 
-/** Send all joints to the configured safe neutral pose. */
-export function armHome() {
-  cancelArmSequence(); // a pending staged move must not fire after homing
-  const moves = [];
-  for (const [key, j] of Object.entries(ARM.joints)) {
-    state[key] = j.home;
-    moves.push({ servoId: j.servoId, angleDeg: j.home });
-  }
-  publishJoints(moves);
-  notify();
-}
+// ---- Pose sequences ----------------------------------------------------------
+// The vendor driver drops /TargetAngle commands that arrive back-to-back
+// (subscriber queue of 1 + per-servo serial writes), so multi-joint poses are
+// sent one joint at a time, paced ARM.interCommandMs apart, and verified
+// against /CurrentAngle afterwards with a single re-send for any dropped joint.
 
-// ---- Staged READY pose -----------------------------------------------------
+let activeSeq = 0; // bumping this aborts any in-flight sequence
 
-let seqTimer = null;
-
-/** Abort a pending staged move (called on e-stop and before new sequences). */
+/** Abort a pending pose sequence (called on e-stop and before new poses). */
 export function cancelArmSequence() {
-  clearTimeout(seqTimer);
-  seqTimer = null;
+  activeSeq += 1;
 }
 
-/**
- * Drive to the READY pose in two stages: the lead joint moves first, and the
- * remaining joints start once it has progressed `followAfterDeg` — estimated
- * from runTimeMs, since the driver interpolates each move over run_time.
- */
-export function armReady() {
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function runPose(angles, { leadJoint = null, followAfterDeg = 0 } = {}) {
   cancelArmSequence();
-  const { angles, leadJoint, followAfterDeg } = ARM.readyPose;
+  const seq = activeSeq;
 
-  const startDeg = state[leadJoint];
-  setArmJoint(leadJoint, angles[leadJoint]);
-  const delta = Math.abs(state[leadJoint] - startDeg); // post-clamp travel
+  const keys = Object.keys(ARM.joints).filter((k) => k in angles);
+  const order = leadJoint
+    ? [leadJoint, ...keys.filter((k) => k !== leadJoint)]
+    : keys;
+  const leadStartDeg = leadJoint ? state[leadJoint] : 0;
 
-  // Time for the lead joint to cover followAfterDeg of its travel.
-  const fraction = delta > 0 ? Math.min(1, followAfterDeg / delta) : 0;
-  const delayMs = Math.round(ARM.runTimeMs * fraction);
+  for (let i = 0; i < order.length; i++) {
+    if (seq !== activeSeq) return; // cancelled (e-stop / newer pose)
+    const key = order[i];
 
-  seqTimer = setTimeout(() => {
-    seqTimer = null;
-    for (const key of Object.keys(angles)) {
-      if (key !== leadJoint) setArmJoint(key, angles[key]);
+    if (i === 1 && leadJoint) {
+      // Staging: followers start once the lead has covered followAfterDeg,
+      // estimated from run_time (driver interpolates moves over run_time).
+      const delta = Math.abs(state[leadJoint] - leadStartDeg);
+      const fraction = delta > 0 ? Math.min(1, followAfterDeg / delta) : 0;
+      const stageDelay = Math.round(ARM.runTimeMs * fraction);
+      await wait(Math.max(stageDelay, ARM.interCommandMs));
+      if (seq !== activeSeq) return;
     }
-  }, delayMs);
+
+    setArmJoint(key, angles[key]);
+    if (i < order.length - 1 && !(i === 0 && leadJoint)) {
+      await wait(ARM.interCommandMs); // pacing so the driver keeps every command
+    }
+  }
+
+  // Verify once after the move settles; re-send anything the driver dropped.
+  await wait(ARM.runTimeMs + 300);
+  if (seq !== activeSeq || !isConnected()) return;
+  try {
+    const resp = await callService(SERVICES.currentAngle, { apply: 'GetJoint' });
+    const reported = resp?.RobotArm?.joint ?? [];
+    for (const r of reported) {
+      const key = keys.find((k) => ARM.joints[k].servoId === r.id);
+      if (!key) continue;
+      if (Math.abs(Number(r.angle) - state[key]) > ARM.verifyToleranceDeg) {
+        if (seq !== activeSeq) return;
+        setArmJoint(key, state[key]); // one corrective re-send
+        await wait(ARM.interCommandMs);
+      }
+    }
+  } catch { /* verification is best-effort; never throws into the UI */ }
+}
+
+/** Send all joints to the configured safe neutral pose (paced + verified). */
+export function armHome() {
+  const angles = {};
+  for (const [key, j] of Object.entries(ARM.joints)) angles[key] = j.home;
+  runPose(angles);
+}
+
+/** Staged READY pose: lead joint first, followers after followAfterDeg. */
+export function armReady() {
+  const { angles, leadJoint, followAfterDeg } = ARM.readyPose;
+  runPose(angles, { leadJoint, followAfterDeg });
 }

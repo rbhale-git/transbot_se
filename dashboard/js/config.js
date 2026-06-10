@@ -107,6 +107,13 @@ export const ARM = {
   stepDeg: 4,
   runTimeMs: 800, // moderate move time so joints never slam (brief requirement)
 
+  // Multi-joint poses are sent as ONE command PER JOINT, paced apart: the
+  // vendor driver drops commands when they arrive back-to-back (subscriber
+  // queue of 1 + bus-servo serial writes). After the move, /CurrentAngle is
+  // polled once and any joint off target is re-commanded.
+  interCommandMs: 150,
+  verifyToleranceDeg: 8,
+
   // READY pose (operator-specified): staged so the arm clears itself —
   // the lead joint moves first, followers start once it has progressed
   // followAfterDeg (estimated from runTimeMs; the driver doesn't stream

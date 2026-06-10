@@ -20,13 +20,15 @@
   <!-- 1. Yahboom driver bringup -->
   <include file="$(find transbot_bringup)/launch/bringup.launch" />
 
-  <!-- 2. Camera -->
+  <!-- 2. Camera: 720p requires MJPG capture (the sensor only does 9 fps of
+       raw YUYV at 1280x720, but 60 fps of MJPG; we cap at 30 to keep the
+       Nano's decode + re-encode load sane). -->
   <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen"
         respawn="true" respawn_delay="5">
     <param name="video_device" value="/dev/video0" />
-    <param name="image_width" value="640" />
-    <param name="image_height" value="480" />
-    <param name="pixel_format" value="yuyv" />
+    <param name="image_width" value="1280" />
+    <param name="image_height" value="720" />
+    <param name="pixel_format" value="mjpeg" />
     <param name="framerate" value="30" />
     <param name="camera_frame_id" value="usb_cam" />
   </node>
@@ -41,4 +43,13 @@
   <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
     <arg name="port" value="9090" />
   </include>
+
+  <!-- 5. SAFETY: cmd_vel watchdog. The driver executes the last command
+       forever; if the teleop link degrades mid-drive (silent TCP blackhole,
+       not a clean close) no zero-Twist ever arrives and the robot runs
+       away — observed in the field. This node publishes zero Twists after
+       0.5 s of command silence while moving. The script is deployed into
+       transbot_bringup/scripts/ so roslaunch can resolve it. -->
+  <node name="cmd_vel_watchdog" pkg="transbot_bringup" type="cmd_vel_watchdog.py"
+        output="screen" respawn="true" respawn_delay="5" />
 </launch>

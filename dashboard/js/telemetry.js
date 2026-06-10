@@ -57,11 +57,18 @@ function startSubscriptions() {
   unsubs.push(subscribe(TOPICS.imu, (m) => emit('imu', extractImu(m))));
   unsubs.push(subscribe(TOPICS.battery, (m) => emit('battery', extractBattery(m))));
 
-  // Camera FPS: camera_info arrives once per captured frame.
+  // Camera FPS + resolution: camera_info arrives once per captured frame
+  // and carries the capture dimensions.
   frameCount = 0;
-  unsubs.push(subscribe(TOPICS.cameraInfo, () => { frameCount += 1; }));
+  let camW = null;
+  let camH = null;
+  unsubs.push(subscribe(TOPICS.cameraInfo, (m) => {
+    frameCount += 1;
+    camW = m?.width ?? camW;
+    camH = m?.height ?? camH;
+  }));
   fpsTimer = setInterval(() => {
-    emit('fps', frameCount);
+    emit('fps', { fps: frameCount, width: camW, height: camH });
     frameCount = 0;
   }, 1000);
 

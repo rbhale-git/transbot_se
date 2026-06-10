@@ -127,8 +127,15 @@ function initImuOverlay() {
 // ---- FPS counter (bottom-left of the camera stage) -----------------------------
 
 function initFpsCounter() {
-  onTelemetry('fps', (fps) => {
-    $('hud-fps').textContent = fps === null ? '--' : fps;
+  onTelemetry('fps', (info) => {
+    if (info === null) {
+      $('hud-fps').textContent = '--';
+      $('hud-res').textContent = '';
+      return;
+    }
+    $('hud-fps').textContent = info.fps;
+    $('hud-res').textContent =
+      (info.width && info.height) ? `${info.width}×${info.height}` : '';
   });
 }
 

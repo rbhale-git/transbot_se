@@ -523,6 +523,11 @@ main {
   color: var(--green);
   font-variant-numeric: tabular-nums;
 }
+.hud-res {
+  margin-left: 8px;
+  color: rgba(174, 191, 204, 0.55);
+  font-variant-numeric: tabular-nums;
+}
 
 #video-nosignal {
   position: relative;

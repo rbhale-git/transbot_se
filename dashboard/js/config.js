@@ -114,6 +114,12 @@ export const ARM = {
   interCommandMs: 150,
   verifyToleranceDeg: 8,
 
+  // STOW pose (operator-specified): J7/J8 only — the gripper (J9) is left
+  // wherever it is so it keeps holding whatever it has.
+  stowPose: {
+    angles: { j7: 225, j8: 70 },
+  },
+
   // READY pose (operator-specified): staged so the arm clears itself —
   // the lead joint moves first, followers start once it has progressed
   // followAfterDeg (estimated from runTimeMs; the driver doesn't stream

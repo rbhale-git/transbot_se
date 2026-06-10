@@ -120,13 +120,9 @@ export function armHome() {
   runPose(angles);
 }
 
-/** Like armHome, but leaves the gripper (J9) wherever it is. */
+/** Stow pose from config (J7/J8 only) — the gripper (J9) stays put. */
 export function armStow() {
-  const angles = {};
-  for (const [key, j] of Object.entries(ARM.joints)) {
-    if (key !== 'j9') angles[key] = j.home;
-  }
-  runPose(angles);
+  runPose({ ...ARM.stowPose.angles });
 }
 
 /**

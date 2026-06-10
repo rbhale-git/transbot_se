@@ -1,7 +1,9 @@
 # Transbot SE Laptop Control Dashboard
 
 A laptop-based control and telemetry web dashboard for the Yahboom Transbot SE
-robot (Jetson Nano B01, ROS Melodic).
+robot (Jetson Nano B01, ROS Melodic), plus a growing set of laptop-side AI
+behaviors (`ai/`) that drive the robot through the same interfaces — face
+tracking on the gimbal today, person following next.
 
 ## Architecture (v1)
 
@@ -11,6 +13,10 @@ robot (Jetson Nano B01, ROS Melodic).
 - **Laptop:** a static web dashboard (HTML/CSS/JS + roslib.js) served locally.
   It publishes control topics and subscribes to telemetry via rosbridge, and
   embeds the MJPEG stream. No ROS install needed on the laptop.
+- **AI behaviors (laptop):** a Python 3 package (`ai/`) that reads frames from
+  the MJPEG stream and commands the robot over rosbridge (roslibpy) — modern
+  Python and CV tooling without touching the Melodic/Python 2 stack. See
+  [AI behaviors](#ai-behaviors-ai) below.
 
 ```mermaid
 flowchart LR
@@ -95,6 +101,11 @@ sudo nmcli con up Transbot    # start the hotspot AP
 - [x] Phase 4 — test and safety pass on the real robot complete; checklist
       and results below
 - [x] Phase 5 — docs
+- [x] AI stage 1 — face detection + gimbal tracking, live-calibrated
+      (`python -m ai.face_tracking`; notebook: `docs/GIMBAL_TRACKING_NOTEBOOK.md`)
+- [ ] AI stage 2 — person following + safety prerequisites (command-priority
+      mux, dashboard arm/disarm panel); approved design:
+      `docs/superpowers/specs/2026-06-10-person-following-design.md`
 
 ## Quick start (real robot)
 
@@ -232,18 +243,18 @@ deliberately not scripted — they happen only after an explicit go-ahead.
 
 ## Config reference (`dashboard/js/config.js`)
 
-Everything tunable lives in one module. Entries marked **TO-VERIFY** are
-vendor-doc hints that Phase 1 discovery will confirm or correct; all code
-reads them from config, so fixes land in one place.
+Everything tunable lives in one module; all code reads from config, so fixes
+land in one place. Entries originally marked **TO-VERIFY** were confirmed or
+corrected during Phase 1 discovery — `FINDINGS.md` is the verified record.
 
 | Block | Holds | Notes |
 | --- | --- | --- |
-| `PROFILES` | rosbridge + video URL per network | `mock`, `home` (192.168.1.11), `hotspot` (IP TO-VERIFY) |
-| `TOPICS` | name + message type per topic | `/cmd_vel` verified (ROS standard); `/PWMServo`, `/TargetAngle`, telemetry topics TO-VERIFY |
-| `SERVICES` | `/CurrentAngle` (TO-VERIFY), `/rosapi/get_time` | latter ships with rosbridge |
+| `PROFILES` | rosbridge + video URL per network | `mock`, `home` (192.168.0.109), `hotspot` (192.168.1.11) |
+| `TOPICS` | name + message type per topic | all verified — see `FINDINGS.md` |
+| `SERVICES` | `/CurrentAngle`, `/rosapi/get_time` | latter ships with rosbridge |
 | `MOTION` | `hardMax` (driver limits, never exceeded) and `cap` (operating limit) per axis | caps are live-tunable in SETTINGS, clamped to `hardMax` |
 | `GIMBAL` / `ARM` | servo ids, ranges, home angles (operator-tuned), step sizes, `invertStep` per axis, arm `run_time`, `interCommandMs` + `verifyToleranceDeg` (pose pacing/repair), `readyPose` (staged deploy) | verified on the robot |
-| `POWER` | low-voltage warning threshold | 9.9 V for the 3S pack, TO-VERIFY |
+| `POWER` | low-voltage warning threshold | 9.9 V for the 3S pack |
 | `KEYS` | every key binding (`event.code` values) | legend renders from this, so docs can't drift |
 | `GAMEPAD` | deadzone, rates, button mapping | standard-mapping layout |
 | `TELEMETRY` / `RECONNECT` | poll intervals, staleness window, backoff | — |
@@ -252,28 +263,62 @@ Message-shape assumptions for the two custom topics are isolated in
 `buildPwmServoMessage()` (gimbal.js) and `buildArmMessage()` (arm.js) — the
 only two functions to edit after discovery.
 
+## AI behaviors (`ai/`)
+
+AI behaviors are developed and run **on the laptop** (Python 3) and talk to
+the robot exactly like the dashboard does: frames in via the MJPEG stream,
+commands out via rosbridge (`roslibpy`). No robot-side changes are needed to
+run a behavior, the robot-side `cmd_vel` watchdog covers an AI crash or link
+loss, and a behavior can be ported to the Jetson later if it ever needs to
+run untethered.
+
+```powershell
+pip install -r ai/requirements.txt
+python -m ai.face_tracking        # stage 1: face-tracking gimbal (q quit, c home, t pause)
+python -m ai.face_tracking.calibrate   # re-measure loop latency + per-axis gains
+python -m pytest ai/tests
+```
+
+Layout: `ai/common/` (MJPEG client, rosbridge client, safety primitives —
+shared by every behavior), `ai/face_tracking/` (YuNet detector +
+move-and-settle gimbal tracker), `ai/config.py` (mirrors the verified values
+in `dashboard/js/config.js`), `ai/models/` (ONNX models).
+
+Engineering notes live in `docs/` notebook-style: `docs/AI_NOTEBOOK.md`
+(connection recipes, rosbridge failure modes and mitigations) and
+`docs/GIMBAL_TRACKING_NOTEBOOK.md` (why move-and-settle beats continuous
+control over a ~0.8 s blind video loop, measured constants, calibration
+method).
+
+**Staged roadmap:** ① face-tracking gimbal — done; ② person following
+(YOLO-based, with a robot-side command-priority mux + dashboard AI
+arm/disarm panel as safety prerequisites — design approved, see
+`docs/superpowers/specs/`); ③ ArUco waypoint navigation; ④ autonomous
+pick-and-place built on the READY/STOW pose primitives.
+
 ## Extending this
 
 The dashboard is deliberately just *one publisher among potential many*. The
 driver doesn't know or care who publishes; anything that writes valid,
 range-clamped messages to the control topics drives the robot identically.
 
-**Topic contract (verify exact types against `FINDINGS.md` after Phase 1):**
+**Topic contract (verified — exact message shapes in `FINDINGS.md`):**
 
 | Topic | Type | Carries |
 | --- | --- | --- |
 | `/cmd_vel` | `geometry_msgs/Twist` | `linear.x` m/s, `angular.z` rad/s |
-| `/PWMServo` | custom (TO-VERIFY) | gimbal servo id (1=pan, 2=tilt) + angle 0–180° |
-| `/TargetAngle` | custom (TO-VERIFY) | arm joint id (7/8/9) + angle + `run_time` ms |
+| `/PWMServo` | `transbot_msgs/PWMServo` | gimbal servo id (1=pan, 2=tilt) + angle 0–180° |
+| `/TargetAngle` | `transbot_msgs/Arm` | arm joint id (7/8/9) + angle + `run_time` ms |
 
-**An AI behavior node** (e.g. person-following, line tracking) should run on
-the Jetson as a native ROS node (rospy/roscpp) and publish the topics above
-directly — no rosbridge hop, lowest latency. It can subscribe to the same
-telemetry (`/transbot/get_vel`, IMU, camera) the dashboard uses. The dashboard
-keeps working as a monitor while the node drives; the spacebar e-stop still
-publishes zero Twists, but note ROS does not arbitrate between publishers —
-a safety-minded behavior node should subscribe to a mute/e-stop signal or be
-stopped before manual override matters.
+**An AI behavior node** runs on the laptop as part of the `ai/` package (see
+[AI behaviors](#ai-behaviors-ai)) — frames via MJPEG, commands via rosbridge.
+This was a deliberate choice over a native Jetson node: modern Python 3 + CV
+libraries, fast iteration, and the Nano's CPU is already busy serving the
+camera. Note ROS does not arbitrate between publishers, so before any
+behavior touches `/cmd_vel` autonomously, a robot-side command-priority mux
+(manual > AI, with a lower AI speed cap and a dashboard arm/disarm switch)
+arbitrates — design in `docs/superpowers/specs/`. Gimbal/arm-only behaviors
+(like stage-1 face tracking) don't need the mux.
 
 **An external arm-teleoperation device** (the encoder glove idea) has two
 clean integration points:

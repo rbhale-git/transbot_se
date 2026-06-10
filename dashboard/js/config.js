@@ -119,7 +119,7 @@ export const ARM = {
   // followAfterDeg (estimated from runTimeMs; the driver doesn't stream
   // joint progress fast enough to track it live).
   readyPose: {
-    angles: { j7: 115, j8: 175, j9: 30 },
+    angles: { j7: 110, j8: 175, j9: 30 },
     leadJoint: 'j7',
     followAfterDeg: 5,   // tuned on the robot: J8/J9 start after 5° of J7 travel
   },

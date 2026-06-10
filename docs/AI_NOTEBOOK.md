@@ -24,6 +24,10 @@ Staged roadmap (agreed before starting):
 
 ## 2. Stage 1 — Face tracking on the gimbal
 
+Full engineering notebook (design iterations, calibration data, the rosbridge
+incident, test record): GIMBAL_TRACKING_NOTEBOOK.md (+ generated .docx). The
+sections below are the running lab log kept during the work.
+
 ### Design
 
 | Piece | Choice | Why |

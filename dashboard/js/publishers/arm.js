@@ -121,16 +121,14 @@ export function armHome() {
 }
 
 /**
- * Staged READY pose. The lead joint's travel is split in two segments:
- *   1. normal speed for the first followAfterDeg degrees,
- *   2. then re-commanded to the final target at leadSlowFactor speed
- *      (run_time stretched by 1/leadSlowFactor),
- * with the followers starting at the split point, paced apart.
+ * Staged READY pose: the lead joint moves first in one normal-speed command;
+ * followers start once it has covered followAfterDeg (estimated from
+ * run_time), paced apart so the driver keeps every command.
  */
 export async function armReady() {
   cancelArmSequence();
   const seq = activeSeq;
-  const { angles, leadJoint, followAfterDeg, leadSlowFactor } = ARM.readyPose;
+  const { angles, leadJoint, followAfterDeg } = ARM.readyPose;
   const keys = Object.keys(ARM.joints).filter((k) => k in angles);
   const followers = keys.filter((k) => k !== leadJoint);
 
@@ -139,26 +137,12 @@ export async function armReady() {
   const target = clamp(angles[leadJoint], j.min, j.max);
   const delta = Math.abs(target - start);
 
-  let settleMs = ARM.runTimeMs;
-  if (delta <= followAfterDeg) {
-    // Already within the staging distance — single normal-speed command.
-    setArmJoint(leadJoint, target);
-    await wait(ARM.interCommandMs);
-  } else {
-    // Segment 1: normal speed to the split point.
-    const dir = Math.sign(target - start);
-    const mid = start + dir * followAfterDeg;
-    const t1 = Math.round(ARM.runTimeMs * (followAfterDeg / delta));
-    setArmJoint(leadJoint, mid, t1);
-    await wait(Math.max(t1, ARM.interCommandMs));
-    if (seq !== activeSeq) return;
+  setArmJoint(leadJoint, target);
 
-    // Segment 2: remaining travel at reduced speed.
-    const t2 = Math.round((ARM.runTimeMs * ((delta - followAfterDeg) / delta)) / leadSlowFactor);
-    setArmJoint(leadJoint, target, t2);
-    settleMs = t2;
-    await wait(ARM.interCommandMs);
-  }
+  // Followers start once the lead has covered followAfterDeg of its travel.
+  const fraction = delta > 0 ? Math.min(1, followAfterDeg / delta) : 0;
+  const stageDelay = Math.round(ARM.runTimeMs * fraction);
+  await wait(Math.max(stageDelay, ARM.interCommandMs));
 
   for (const key of followers) {
     if (seq !== activeSeq) return;
@@ -166,6 +150,6 @@ export async function armReady() {
     await wait(ARM.interCommandMs);
   }
 
-  await wait(Math.max(settleMs, ARM.runTimeMs) + 300);
+  await wait(ARM.runTimeMs + 300);
   await verifyAndRepair(seq, keys);
 }

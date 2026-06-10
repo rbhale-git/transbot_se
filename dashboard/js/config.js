@@ -122,7 +122,6 @@ export const ARM = {
     angles: { j7: 115, j8: 175, j9: 30 },
     leadJoint: 'j7',
     followAfterDeg: 5,   // tuned on the robot: J8/J9 start after 5° of J7 travel
-    leadSlowFactor: 0.8, // after followAfterDeg, J7 continues at 80% speed
   },
 };
 

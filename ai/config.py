@@ -66,8 +66,12 @@ FOLLOW = {
     "min_iou": 0.2,
     "lost_grace_s": 0.5,
     # controller — angular: P on horizontal offset (err_x in [-0.5, 0.5])
-    "kp_ang": 2.0,              # rad/s per unit err_x
-    "deadband_x": 0.05,         # |err_x| below this is "centered"
+    # LIVE-TUNED 2026-06-11: kp 2.0 (and 1.0) limit-cycled — with the ~0.8 s
+    # blind stream loop the chassis overshoots any deadband it can't see in
+    # time. kp 0.6 + deadband 0.10 (~6.5 deg) lets the P ramp-down land
+    # inside the band. Move-and-settle is the next rung if this still hunts.
+    "kp_ang": 0.6,              # rad/s per unit err_x
+    "deadband_x": 0.10,         # |err_x| below this is "centered"
     "angular_sign": 1,          # flip to -1 if the robot turns AWAY (live check)
     # controller — linear: P on bbox-height fraction vs setpoint
     "height_setpoint": 0.55,    # bbox h / frame h at the desired follow distance

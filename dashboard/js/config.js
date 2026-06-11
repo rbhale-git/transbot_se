@@ -21,14 +21,19 @@ export const PROFILES = {
     // ever reassigns it, the OLED shows the current IP (consider a router
     // DHCP reservation for the robot's MAC to pin it).
     rosbridgeUrl: 'ws://192.168.0.109:9090',
-    videoUrl: 'http://192.168.0.109:8080/stream?topic=/usb_cam/image_raw&type=mjpeg',
+    // Dashboard view is downscaled server-side (width/height/quality params):
+    // the camera captures 720p, but encoding full 720p per client saturates
+    // the Nano (load ~6 on 4 cores) and stream latency creeps up — measured
+    // live 2026-06-11 while an AI behavior consumed a second stream. 480p is
+    // plenty for monitoring; AI behaviors request their own downscaled feed.
+    videoUrl: 'http://192.168.0.109:8080/stream?topic=/usb_cam/image_raw&type=mjpeg&width=640&height=480&quality=50',
   },
   hotspot: {
     label: 'ROBOT HOTSPOT',
     // Verified: robot is the gateway at 192.168.1.11 on its own "Transbot"
     // AP (WPA2, SSID "Transbot"). Camera topic /image per FINDINGS.md.
     rosbridgeUrl: 'ws://192.168.1.11:9090',
-    videoUrl: 'http://192.168.1.11:8080/stream?topic=/usb_cam/image_raw&type=mjpeg',
+    videoUrl: 'http://192.168.1.11:8080/stream?topic=/usb_cam/image_raw&type=mjpeg&width=640&height=480&quality=50',
   },
 };
 

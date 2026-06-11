@@ -37,8 +37,13 @@ other. Only gain-calibration error leaks between them.
 
 ### Gimbal loop (fast, inner)
 
-Reuse stage 1's `GimbalTracker` (`ai/face_tracking/tracker.py`) unchanged —
-it is target-agnostic (takes any center point). It tracks the locked
+Reuse stage 1's `GimbalTracker` (`ai/face_tracking/tracker.py`) — it is
+target-agnostic (takes any center point). Code review added two small
+semantic changes to it (affecting stage 1 too, both improvements): a
+`settling` property, and `recenter()` now opens a settle window like any
+other move (the lost branch no longer cancels it), so the first
+post-recenter update can't correct against a frame still showing the old
+pose. It tracks the locked
 person's bbox center on both axes with the proven move-and-settle pattern
 and the measured constants: pan kp 41, tilt kp 20, settle ~1.1 s, per-move
 clamp 20°, deadband 0.06. Home for this behavior is the follow pose
@@ -62,6 +67,12 @@ ang = -kp_ang * err_total * angular_sign      (existing deadband, cap)
   offset back into image-error convention.
 - When the gimbal is centered this reduces to exactly today's live-tuned
   behavior; kp_ang 0.6 and deadband_x 0.10 keep their meaning.
+- **Settle latch (added in review):** the runner does NOT fuse the live
+  `pan_deg` — commanded pan updates instantly while frames lag ~0.8 s, so
+  for the settle window after each move the bearing would double-count the
+  correction. The runner latches the PRE-move pan (`fusion_pan`) while
+  `gimbal.settling` and refreshes from live `pan_deg` only once the window
+  expires. The invariance argument above holds *because* of this latch.
 
 ### Chassis linear
 
@@ -82,9 +93,12 @@ mirrored) to settle any dispute on the robot.
 - Instantiate a `GimbalTracker` with the follow pose as home.
 - Each control tick: `TargetTracker` picks the target →
   `GimbalTracker.update(target.center, frame_size)` → send resulting
-  `/PWMServo` commands, **paced 150 ms apart** when both axes move (driver
-  drops back-to-back servo commands) → `FollowController.update(...)` now
-  also receives `gimbal.pan_deg`.
+  `/PWMServo` commands through `ServoPacer` (`ai/common/safety.py`), which
+  enforces ≥150 ms between sends **across calls**, not just within one
+  (driver drops back-to-back servo commands; a silently dropped command
+  would desync tracker state from the physical servo and bias the fused
+  bearing) → `FollowController.update(...)` receives the settle-latched
+  `fusion_pan` offset (see Chassis angular).
 - The gimbal tracks **whenever a target is locked, regardless of arm
   state** — arming gates chassis motion only. A disarmed robot that watches
   the operator with its camera doubles as a pre-flight check that lock
@@ -94,12 +108,18 @@ mirrored) to settle any dispute on the robot.
   where the person vanished (best relock odds), then recenters to the follow
   pose after ~5 s lost (stage-1 pattern).
 - Startup: park at the follow pose (existing behavior, now via the tracker's
-  recenter so internal state matches reality).
+  recenter so internal state matches reality; the recenter opens a ~1.1 s
+  settle window, so the first tracking move comes shortly after launch).
 
 ### Escape hatch
 
-A `--fixed-gimbal` CLI flag restores today's parked-gimbal behavior, for
-live A/B comparison and as a fallback if the coupled tuning fights us.
+A `--fixed-gimbal` CLI flag parks the gimbal for live A/B comparison and as
+a fallback if the coupled tuning fights us. Chassis *steering* is then
+exactly the old behavior (pan offset is identically 0). The *linear* term is
+not byte-identical to the old runner: cos(image-bearing) scaling applies
+unconditionally, so approach speed is up to ~34% softer when the person is
+near the frame edge. Brief the A/B operator on this before attributing
+differences to the gimbal.
 
 ## Config
 
@@ -118,6 +138,13 @@ FOLLOW gains untouched.
 - **Coupled oscillation:** the bearing-invariance argument says the loops
   should not fight; if live behavior hunts anyway, the tuning ladder is:
   lower `kp_ang` → lengthen gimbal settle → `--fixed-gimbal`.
+- **Known bounded quirk (final review):** relock after a lost-recenter can
+  nudge the wrong way for ≤ ~1.1 s. The settle window counts target-present
+  ticks, not wall-clock, so after a recenter during a LONG lost streak the
+  latched `fusion_pan` is stale (frames already show home). Bounded
+  (≤ ~0.25 rad/s, under cap), self-correcting once settled, only occurs
+  armed + relock after ≥5 s loss. Follow-up idea: timestamp the latch and
+  expire it after the ~0.8 s stream lag in wall-clock.
 
 ## Testing
 

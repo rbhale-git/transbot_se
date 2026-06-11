@@ -252,6 +252,15 @@ git commit -m "Config: FOLLOW gimbal_track block + bearing-fusion constants"
 
 ---
 
+> **Post-implementation note:** review fixes (commit d7ec7ce) superseded
+> parts of Task 3 as written: `send_servo_commands` became the stateful
+> `ServoPacer` in `ai/common/safety.py` (pacing across calls, with tests);
+> the controller receives a settle-latched `fusion_pan` instead of live
+> `gimbal.pan_deg`; `GimbalTracker.recenter()` now starts a settle window.
+> Step 8's "behavior identical to the pre-change runner" under
+> `--fixed-gimbal` is inexact — linear keeps cos(image-bearing) scaling.
+> The committed code and the updated spec are authoritative.
+
 ### Task 3: Runner integration — gimbal tracking in the follow loop
 
 **Files:**

@@ -22,3 +22,4 @@ __pycache__/
 .claude/
 ~$*
 runner.log
+serve_dashboard_log.txt

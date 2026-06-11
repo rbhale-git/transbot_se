@@ -5,9 +5,10 @@
 
 import {
   PROFILES, DEFAULT_PROFILE, MOTION, POWER, TELEMETRY, KEYS, GIMBAL, ARM,
-  VIDEO,
+  VIDEO, TOPICS, stepSign,
 } from './config.js';
 import { connect, onStatus } from './ros.js';
+import { initActuationCheck, onActuationCheck } from './actuation_check.js';
 import { onMotionCommand } from './publishers/motion.js';
 import {
   onGimbalChange, setGimbalX, setGimbalY, recenterGimbal, gimbalPose,
@@ -15,7 +16,7 @@ import {
 import {
   onArmChange, setArmJoint, armHome, armReady, armStow, cancelArmSequence,
 } from './publishers/arm.js';
-import { initKeyboard, onEStop } from './keyboard.js';
+import { initKeyboard, onEStop, triggerEStop } from './keyboard.js';
 import { initTelemetry, onTelemetry } from './telemetry.js';
 import {
   initVideo, setVideoUrl, kickVideo, setStreamParams, setStreamEnabled,
@@ -80,6 +81,31 @@ function initStatusLamp() {
   });
 }
 
+// ---- Actuation fault warning --------------------------------------------------
+// Driven by actuation_check.js: when rosbridge silently drops a command-topic
+// registration, light the header chip and flag the affected panel(s) red.
+
+function initActuationWarning() {
+  const chip = $('actuation-warning');
+  const panelFor = {
+    [TOPICS.cmdVel.name]: 'drive-panel',
+    [TOPICS.pwmServo.name]: 'gimbal-panel',
+    [TOPICS.targetAngle.name]: 'arm-panel',
+  };
+  onActuationCheck(({ state, dead = [] }) => {
+    const fault = state === 'fault';
+    chip.classList.toggle('hidden', !fault);
+    for (const [topic, panelId] of Object.entries(panelFor)) {
+      $(panelId).classList.toggle('alert', fault && dead.includes(topic));
+    }
+    if (fault) {
+      chip.title = `rosbridge dropped publisher registration for ${dead.join(', ')}`
+        + ' — commands on these topics are being silently discarded.'
+        + ' Restart rosbridge-dashboard.service on the robot.';
+    }
+  });
+}
+
 // ---- Drive panel ------------------------------------------------------------
 
 function speedBar(el, value, max) {
@@ -116,19 +142,19 @@ function initDrivePanel() {
   }, 1000);
 }
 
-// ---- IMU overlay (top-right of the camera stage) ------------------------------
+// ---- IMU strip (DRIVE panel) ---------------------------------------------------
 
-function initImuOverlay() {
+function initImuStrip() {
   let lastAt = 0;
   onTelemetry('imu', ({ accel, gyro }) => {
     lastAt = performance.now();
-    $('hud-imu-acc').textContent =
+    $('imu-acc').textContent =
       `${fmt(accel?.x, 1)} ${fmt(accel?.y, 1)} ${fmt(accel?.z, 1)}`;
-    $('hud-imu-gyr').textContent =
+    $('imu-gyr').textContent =
       `${fmt(gyro?.x, 2)} ${fmt(gyro?.y, 2)} ${fmt(gyro?.z, 2)}`;
   });
   setInterval(() => {
-    $('hud-imu').classList.toggle(
+    $('imu-strip').classList.toggle(
       'stale', performance.now() - lastAt > TELEMETRY.staleAfterMs);
   }, 1000);
 }
@@ -203,12 +229,16 @@ function initPowerWidget() {
  * Returns { update } for reflecting publisher state back into the controls
  * (programmatic .value writes don't re-fire input events, so no feedback loop).
  */
-function bindAxisControl({ sliderId, numId, slider: sliderEl, num: numEl, min, max, step = 1, set }) {
+function bindAxisControl({ sliderId, numId, slider: sliderEl, num: numEl, min, max, step = 1, set, flip = false }) {
   const slider = sliderEl ?? $(sliderId);
   const num = numEl ?? $(numId);
   slider.min = num.min = min;
   slider.max = num.max = max;
   slider.step = num.step = step;
+  // flip: mirror the SLIDER scale when the servo's positive direction is
+  // reversed (drag right = camera right). The number box stays the true
+  // servo angle. Self-inverse, so one mapping serves both directions.
+  const toSlider = (a) => (flip ? min + max - a : a);
 
   let pending = null;
   let timer = null;
@@ -217,7 +247,7 @@ function bindAxisControl({ sliderId, numId, slider: sliderEl, num: numEl, min, m
     if (pending !== null) { set(pending); pending = null; }
   };
   slider.addEventListener('input', () => {
-    pending = Number(slider.value);
+    pending = toSlider(Number(slider.value));
     if (!timer) timer = setTimeout(flush, 80); // ~12 Hz while dragging
   });
   slider.addEventListener('change', () => {  // drag released / arrow-key step
@@ -232,16 +262,20 @@ function bindAxisControl({ sliderId, numId, slider: sliderEl, num: numEl, min, m
 
   return {
     update(angle) {
-      slider.value = angle;
+      slider.value = toSlider(angle);
       num.value = angle;
     },
   };
 }
 
 function initGimbalPanel() {
+  // Pan: +angle physically pans the view LEFT (same servo truth behind
+  // invertStep), so the slider scale and the map dot are mirrored to make
+  // drag-right = camera-right. Angles themselves stay raw everywhere.
+  const flipPan = stepSign(GIMBAL.x) < 0;
   const pan = bindAxisControl({
     sliderId: 'gimbal-x-slider', numId: 'gimbal-x-num',
-    min: GIMBAL.x.min, max: GIMBAL.x.max, set: setGimbalX,
+    min: GIMBAL.x.min, max: GIMBAL.x.max, set: setGimbalX, flip: flipPan,
   });
   const tilt = bindAxisControl({
     sliderId: 'gimbal-y-slider', numId: 'gimbal-y-num',
@@ -251,8 +285,9 @@ function initGimbalPanel() {
   onGimbalChange(({ x, y }) => {
     pan.update(x);
     tilt.update(y);
-    // Position the map dot: x left→right, y bottom→top.
-    const px = ((x - GIMBAL.x.min) / (GIMBAL.x.max - GIMBAL.x.min)) * 100;
+    // Position the map dot: x left→right (mirrored with the slider), y bottom→top.
+    let px = ((x - GIMBAL.x.min) / (GIMBAL.x.max - GIMBAL.x.min)) * 100;
+    if (flipPan) px = 100 - px;
     const py = (1 - (y - GIMBAL.y.min) / (GIMBAL.y.max - GIMBAL.y.min)) * 100;
     dot.style.left = `${px}%`;
     dot.style.top = `${py}%`;
@@ -378,6 +413,13 @@ function initRecorderControls() {
 
 // ---- E-stop banner ------------------------------------------------------------
 
+function initEStopButton() {
+  $('estop-btn').addEventListener('click', (e) => {
+    triggerEStop(); // same path as the SPACE key
+    e.target.blur(); // keep focus free for driving keys
+  });
+}
+
 function initEStopBanner() {
   const banner = $('estop-banner');
   let timer = null;
@@ -418,8 +460,10 @@ initGamepad();
 initLatency();
 initRecorder();
 initStatusLamp();
+initActuationCheck();
+initActuationWarning();
 initDrivePanel();
-initImuOverlay();
+initImuStrip();
 initFpsCounter();
 initPowerWidget();
 initGimbalPanel();
@@ -429,6 +473,7 @@ initAiPanel();
 initPadIndicator();
 initLatencyReadout();
 initRecorderControls();
+initEStopButton();
 initEStopBanner();
 initLegend();
 initProfileSelect(); // last: triggers the first connect

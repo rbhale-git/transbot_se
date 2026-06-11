@@ -20,7 +20,8 @@ function makeEl(id) {
     children: [],
     classList: { toggle() {}, add() {}, remove() {} },
     addEventListener() {},
-    appendChild(c) { this.children.push(c); },
+    // browser parity: nodes appended into the tree become findable by id
+    appendChild(c) { this.children.push(c); if (c.id) els.set(c.id, c); },
     querySelector() { return makeEl(`${id}-q`); },
     closest() { return makeEl(`${id}-closest`); },
     blur() {},
@@ -35,6 +36,7 @@ function makeEl(id) {
 
 globalThis.document = {
   getElementById(id) {
+    if (els.has(id)) return els.get(id); // dynamically appended elements
     if (!realIds.has(id)) return null; // match browser behavior
     if (!els.has(id)) els.set(id, makeEl(id));
     return els.get(id);
@@ -67,6 +69,9 @@ globalThis.ROSLIB = {
 try {
   await import('../dashboard/js/app.js');
   console.log('BOOT OK — no exception during module evaluation');
+  // boot is the scope of this test: timers/polls left running would hit
+  // stub limits (innerHTML is a no-op), not real bugs — stop here.
+  process.exit(0);
 } catch (e) {
   console.error('BOOT FAILED:');
   console.error(e);

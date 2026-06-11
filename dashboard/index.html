@@ -14,96 +14,135 @@
     <span class="estop-sub">ZERO TWIST SENT</span>
   </div>
 
-  <header>
+  <!-- Left status rail (replaces the old top header) -->
+  <aside class="rail">
     <div class="brand">
       <span class="brand-mark">&#9650;</span>
-      <h1>TRANSBOT&nbsp;SE <span class="dim">// GROUND CONTROL</span></h1>
+      <h1>TRANSBOT&nbsp;SE<i>GROUND CONTROL</i></h1>
     </div>
-    <div class="header-right">
-      <label class="profile">
-        NET
+
+    <div class="rail-group">
+      <div class="rail-label">NETWORK</div>
+      <label class="net-select">
         <select id="profile-select"></select>
       </label>
-      <code id="rosbridge-url" class="dim"></code>
-      <span id="pad-indicator" class="pad-indicator" title="no gamepad">PAD</span>
+      <code id="rosbridge-url" class="net-sub"></code>
+    </div>
+
+    <div class="status-card">
+      <div class="status-row">
+        <span>LINK</span>
+        <span class="pill link-pill">
+          <span id="link-lamp" class="lamp" data-status="disconnected"></span>
+          <span id="link-text">LINK DOWN</span>
+          <span id="rtt" class="rtt">--</span>
+        </span>
+      </div>
+      <div class="status-row">
+        <span>GAMEPAD</span>
+        <span id="pad-indicator" class="pill pad-indicator" title="no gamepad">PAD</span>
+      </div>
+      <span id="actuation-warning" class="warning hidden">CMD FAULT</span>
+    </div>
+
+    <div class="status-card" id="power-widget" title="battery voltage">
+      <div class="rail-label">BATTERY</div>
+      <div class="pw-volt"><b id="battery-voltage">--</b><span class="unit">V</span></div>
+      <div class="bar batt-bar"><div class="bar-fill batt" id="battery-bar"></div></div>
+      <span id="battery-warning" class="warning hidden">LOW</span>
+    </div>
+
+    <div class="rec-row">
       <button id="rec-btn" class="hbtn" title="record all topic traffic">&#9679; REC</button>
       <button id="save-btn" class="hbtn" title="download session as JSONL" disabled>SAVE</button>
-      <div class="power-widget" id="power-widget" title="battery voltage">
-        <span class="pw-volt"><b id="battery-voltage">--</b><span class="unit">V</span></span>
-        <div class="bar batt-bar"><div class="bar-fill batt" id="battery-bar"></div></div>
-        <span id="battery-warning" class="warning hidden">LOW</span>
-      </div>
-      <div class="link-status">
-        <span id="link-lamp" class="lamp" data-status="disconnected"></span>
-        <span id="link-text">LINK DOWN</span>
-        <span id="rtt" class="rtt">--</span>
-      </div>
     </div>
-  </header>
 
-  <main>
-    <!-- Video pane -->
-    <section class="panel video-panel" aria-label="camera">
-      <div class="panel-title"><span class="num">00</span>CAMERA
-        <button id="video-power-btn" class="hbtn vbtn" title="stream on/off — each stream costs the robot CPU; switch off while an AI behavior runs">STREAM: ON</button>
-        <button id="video-quality-btn" class="hbtn vbtn" title="SD (low robot load) / HD (full 720p for driving)">SD</button>
-      </div>
-      <div class="video-frame">
-        <!-- the stage locks to the stream's true aspect ratio, so the bezel,
-             brackets, and HUD always hug the actual picture -->
-        <div class="video-stage">
-          <img id="video-stream" class="hidden" alt="robot camera stream">
-          <div id="video-nosignal">
-            <span>NO SIGNAL</span>
-          </div>
-          <!-- live HUD: commanded velocities + recording marker (top-left) -->
-          <div class="hud">
-            <span class="hud-item">LIN <b id="hud-lin">0.00</b></span>
-            <span class="hud-item">ANG <b id="hud-ang">0.00</b></span>
-            <span class="hud-item hud-rec hidden" id="hud-rec">&#9679; REC</span>
-          </div>
-          <!-- IMU overlay (top-right) -->
-          <div class="hud-imu" id="hud-imu">
-            <div><span class="hud-tag">ACC</span> <b id="hud-imu-acc">--</b></div>
-            <div><span class="hud-tag">GYR</span> <b id="hud-imu-gyr">--</b></div>
-          </div>
-          <!-- FPS + capture resolution (bottom-left) -->
-          <div class="hud-fps"><b id="hud-fps">--</b> FPS <span class="hud-res" id="hud-res"></span></div>
-        </div>
-      </div>
-    </section>
+    <div class="rail-spacer"></div>
 
-    <!-- Control deck: every panel visible at a glance, no scrolling -->
-    <div class="deck">
+    <button id="estop-btn" title="emergency stop: zero twist + disarm AI (same as SPACE)">E-STOP</button>
+  </aside>
 
-      <section id="drive-panel" class="panel" aria-label="drive">
-        <div class="panel-title"><span class="num">01</span>DRIVE</div>
-        <div class="metric-grid">
-          <div class="metric">
-            <span class="metric-label">CMD LIN <span class="unit">m/s</span></span>
-            <span class="metric-value" id="cmd-linear">0.00</span>
-            <div class="bar"><div class="bar-fill cmd" id="cmd-linear-bar"></div></div>
-          </div>
-          <div class="metric">
-            <span class="metric-label">MEAS LIN <span class="unit">m/s</span></span>
-            <span class="metric-value meas" id="meas-linear">--</span>
-            <div class="bar"><div class="bar-fill meas" id="meas-linear-bar"></div></div>
-          </div>
-          <div class="metric">
-            <span class="metric-label">CMD ANG <span class="unit">rad/s</span></span>
-            <span class="metric-value" id="cmd-angular">0.00</span>
-            <div class="bar"><div class="bar-fill cmd" id="cmd-angular-bar"></div></div>
-          </div>
-          <div class="metric">
-            <span class="metric-label">MEAS ANG <span class="unit">rad/s</span></span>
-            <span class="metric-value meas" id="meas-angular">--</span>
-            <div class="bar"><div class="bar-fill meas" id="meas-angular-bar"></div></div>
+  <div class="content">
+    <div class="row-top">
+
+      <!-- Video well -->
+      <section class="panel video-panel" aria-label="camera">
+        <div class="video-frame">
+          <!-- the stage locks to the stream's true aspect ratio (video.js
+               measures it), so the HUD chips always hug the actual picture -->
+          <div class="video-stage">
+            <img id="video-stream" class="hidden" alt="robot camera stream">
+            <div id="video-nosignal">
+              <span>NO SIGNAL</span>
+            </div>
+            <!-- floating glass chips: live tag + commanded velocities (top) -->
+            <div class="hud">
+              <span class="vchip live-chip"><span class="dot"></span>LIVE &middot; CAM 00</span>
+              <span class="vchip">LIN <b id="hud-lin">0.00</b>&nbsp;&nbsp;ANG <b id="hud-ang">0.00</b></span>
+              <span class="vchip hud-rec hidden" id="hud-rec">&#9679; REC</span>
+            </div>
+            <!-- FPS chip + segmented stream controls (bottom) -->
+            <div class="hud-bottom">
+              <span class="vchip"><b id="hud-fps">--</b> FPS <span class="hud-res" id="hud-res"></span></span>
+              <span class="vspacer"></span>
+              <span class="seg">
+                <button id="video-power-btn" class="vbtn" title="stream on/off — each stream costs the robot CPU; switch off while an AI behavior runs">STREAM: ON</button>
+                <button id="video-quality-btn" class="vbtn" title="SD (low robot load) / HD (full 720p for driving)">SD</button>
+              </span>
+            </div>
           </div>
         </div>
       </section>
 
+      <!-- Right column: DRIVE + AI beside the video -->
+      <div class="side-col">
+
+        <section id="drive-panel" class="panel" aria-label="drive">
+          <div class="panel-title">DRIVE</div>
+          <div class="metric-grid">
+            <div class="metric">
+              <span class="metric-label">CMD LIN</span>
+              <span class="metric-line"><span class="metric-value" id="cmd-linear">0.00</span><span class="unit">m/s</span></span>
+              <div class="bar"><div class="bar-fill cmd" id="cmd-linear-bar"></div></div>
+            </div>
+            <div class="metric">
+              <span class="metric-label">MEAS LIN</span>
+              <span class="metric-line"><span class="metric-value meas" id="meas-linear">--</span><span class="unit">m/s</span></span>
+              <div class="bar"><div class="bar-fill meas" id="meas-linear-bar"></div></div>
+            </div>
+            <div class="metric">
+              <span class="metric-label">CMD ANG</span>
+              <span class="metric-line"><span class="metric-value" id="cmd-angular">0.00</span><span class="unit">rad/s</span></span>
+              <div class="bar"><div class="bar-fill cmd" id="cmd-angular-bar"></div></div>
+            </div>
+            <div class="metric">
+              <span class="metric-label">MEAS ANG</span>
+              <span class="metric-line"><span class="metric-value meas" id="meas-angular">--</span><span class="unit">rad/s</span></span>
+              <div class="bar"><div class="bar-fill meas" id="meas-angular-bar"></div></div>
+            </div>
+          </div>
+          <div class="imu-strip" id="imu-strip">
+            <div class="kv"><span>IMU ACC <span class="unit">m/s&sup2;</span></span><code id="imu-acc">--</code></div>
+            <div class="kv"><span>IMU GYR <span class="unit">rad/s</span></span><code id="imu-gyr">--</code></div>
+          </div>
+        </section>
+
+        <section id="ai-panel" class="panel" aria-label="ai">
+          <div class="panel-title">AI</div>
+          <button id="ai-arm-btn" class="panel-btn" title="allow AI behaviors to drive the chassis (robot-side mux enforces caps; joystick always overrides)">&#9655; ARM AI</button>
+          <div class="kv"><span>DRIVE SRC</span><code id="ai-source" class="dim">--</code></div>
+          <div class="kv"><span>AI ARMED</span><code id="ai-armed" class="dim">--</code></div>
+          <div class="kv"><span>BEHAVIOR</span><code id="ai-behavior" class="dim small">--</code></div>
+          <!-- ai_panel.js appends the runner START/STOP + PREVIEW buttons here -->
+        </section>
+
+      </div>
+    </div>
+
+    <div class="row-bottom">
+
       <section id="gimbal-panel" class="panel" aria-label="gimbal">
-        <div class="panel-title"><span class="num">02</span>GIMBAL</div>
+        <div class="panel-title">GIMBAL</div>
         <!-- 2D position map: the dot is where the camera points -->
         <div class="gimbal-map" aria-hidden="true">
           <div class="gimbal-dot" id="gimbal-dot"></div>
@@ -132,7 +171,7 @@
       </section>
 
       <section id="arm-panel" class="panel" aria-label="arm">
-        <div class="panel-title"><span class="num">03</span>ARM</div>
+        <div class="panel-title">ARM</div>
         <div class="ctl">
           <div class="ctl-head">
             <span class="ctl-label">J7</span>
@@ -158,7 +197,7 @@
           <input type="range" id="arm-j9-slider" class="ctl-slider">
         </div>
         <div class="btn-row">
-          <button id="arm-home-btn" class="panel-btn" title="all joints to home, including the gripper (same as H key)">&#8962; HOME</button>
+          <button id="arm-home-btn" class="panel-btn accent" title="all joints to home, including the gripper (same as H key)">&#8962; HOME</button>
           <button id="arm-ready-btn" class="panel-btn" title="staged deploy: J8 leads, J7+J9 follow">&#9670; READY</button>
           <button id="arm-stow-btn" class="panel-btn" title="J7+J8 to home; gripper (J9) stays where it is">&#9650; STOW</button>
         </div>
@@ -166,26 +205,19 @@
       </section>
 
       <section id="settings-panel" class="panel" aria-label="settings">
-        <div class="panel-title"><span class="num">04</span>SETTINGS</div>
+        <div class="panel-title">SETTINGS
+          <button id="settings-reset-btn" class="panel-btn title-btn" title="restore all settings to config defaults">&#8635; RESET</button>
+        </div>
         <!-- rows are generated from SETTING_DEFS in settings.js -->
         <div id="settings-rows"></div>
-        <button id="settings-reset-btn" class="panel-btn" title="restore all settings to config defaults">&#8635; RESET DEFAULTS</button>
-      </section>
-
-      <section id="ai-panel" class="panel" aria-label="ai">
-        <div class="panel-title"><span class="num">05</span>AI</div>
-        <button id="ai-arm-btn" class="panel-btn" title="allow AI behaviors to drive the chassis (robot-side mux enforces caps; joystick always overrides)">&#9655; ARM AI</button>
-        <div class="kv"><span>DRIVE SRC</span><code id="ai-source" class="dim">--</code></div>
-        <div class="kv"><span>AI ARMED</span><code id="ai-armed" class="dim">--</code></div>
-        <div class="kv"><span>BEHAVIOR</span><code id="ai-behavior" class="dim small">--</code></div>
       </section>
 
     </div>
-  </main>
 
-  <footer>
-    <div id="legend"></div>
-  </footer>
+    <footer>
+      <div id="legend"></div>
+    </footer>
+  </div>
 
   <!-- roslib is vendored locally so the dashboard works offline (hotspot mode). -->
   <script src="lib/roslib.min.js"></script>

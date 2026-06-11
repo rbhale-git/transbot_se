@@ -30,7 +30,7 @@ import cv2
 
 from ai import config
 from ai.common.connect import connect_with_actuation_check
-from ai.common.safety import RateLimiter
+from ai.common.safety import RateLimiter, ServoPacer
 from ai.common.video import VideoSource
 from ai.face_tracking.tracker import GimbalTracker
 from ai.person_following.controller import FollowController
@@ -110,8 +110,8 @@ def parse_args(argv):
     p.add_argument("--cap-scale", type=float, default=1.0,
                    help="scale ALL output caps (0.5 for the first live run)")
     p.add_argument("--fixed-gimbal", action="store_true",
-                   help="park the gimbal at the follow pose instead of "
-                        "tracking the person with it (pre-spec behavior)")
+                   help="park the gimbal at the follow pose; chassis steers "
+                        "on image error alone (linear keeps cos scaling)")
     p.add_argument("--kp-ang", type=float, default=f["kp_ang"])
     p.add_argument("--kp-lin", type=float, default=f["kp_lin"])
     p.add_argument("--height-setpoint", type=float, default=f["height_setpoint"])
@@ -119,14 +119,6 @@ def parse_args(argv):
                    default=f["angular_sign"])
     p.add_argument("--smoothing", type=float, default=f["smoothing"])
     return p.parse_args(argv)
-
-
-def send_servo_commands(sink, commands):
-    """Send /PWMServo commands, paced — the driver drops back-to-back sends."""
-    for i, (servo_id, angle) in enumerate(commands):
-        if i:
-            time.sleep(0.15)
-        sink.send(servo_id, angle)
 
 
 def draw_overlay(frame, dets, target, tracker, gimbal, lin, ang, armed,
@@ -180,6 +172,7 @@ def main(argv=None):
         smoothing=gt["smoothing"], settle_updates=gt["settle_updates"])
     control_gate = RateLimiter(min_interval_s=1.0 / f["control_rate_hz"])
     status_gate = RateLimiter(min_interval_s=1.0 / f["status_rate_hz"])
+    pacer = ServoPacer(min_interval_s=0.15)
 
     pace_s = None
     if isinstance(source, str) and Path(source).is_file():
@@ -204,8 +197,11 @@ def main(argv=None):
 
             # Sync: drive the gimbal to the follow pose so tracker state
             # matches reality (the driver does not echo servo positions).
-            send_servo_commands(sink, gimbal.start_commands())
+            pacer.send(sink, gimbal.start_commands())
 
+            # fusion_pan tracks the pan pose visible to the current frame
+            # (frames lag moves by ~0.8 s; updated at each move, not settle).
+            fusion_pan = f["gimbal_follow"]["pan"]
             paused = False
             while True:
                 frame = src.read(timeout_s=1.0)
@@ -234,10 +230,18 @@ def main(argv=None):
                         # holds (best relock odds), then recenters to the
                         # follow pose after ~5 s (GimbalTracker built-in).
                         center = target.center if target is not None else None
-                        send_servo_commands(sink, gimbal.update(center, (w, h)))
+                        pan_before = gimbal.pan_deg
+                        moves = gimbal.update(center, (w, h))
+                        if moves:
+                            # Frames stay blind to this move for ~0.8 s; fuse
+                            # the bearing with the pose the frames DO show.
+                            fusion_pan = pan_before
+                        pacer.send(sink, moves)
+                    if not gimbal.settling:
+                        fusion_pan = gimbal.pan_deg
                     lin, ang = controller.update(
                         target, (w, h), now,
-                        pan_offset_deg=gimbal.pan_deg - f["gimbal_follow"]["pan"])
+                        pan_offset_deg=fusion_pan - f["gimbal_follow"]["pan"])
                     # Publish continuously while armed: a steady stream (zeros
                     # included) keeps the mux/watchdog state machines quiet.
                     if sink.armed:

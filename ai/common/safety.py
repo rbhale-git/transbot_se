@@ -31,3 +31,24 @@ class RateLimiter:
             return False
         self._last_allowed = now
         return True
+
+
+class ServoPacer:
+    """Paces /PWMServo sends ACROSS calls — the driver drops back-to-back
+    commands, and a silently dropped command desyncs tracker state from the
+    physical servo (which bearing fusion then propagates to the chassis)."""
+
+    def __init__(self, min_interval_s, clock=time.monotonic, sleep=time.sleep):
+        self._min_interval_s = min_interval_s
+        self._clock = clock
+        self._sleep = sleep
+        self._last_send = None
+
+    def send(self, sink, commands):
+        for servo_id, angle in commands:
+            if self._last_send is not None:
+                wait = self._min_interval_s - (self._clock() - self._last_send)
+                if wait > 0:
+                    self._sleep(wait)
+            sink.send(servo_id, angle)
+            self._last_send = self._clock()

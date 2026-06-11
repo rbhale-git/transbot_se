@@ -138,11 +138,13 @@ class TestMoveAndSettle:
         # Still ready to move immediately when the face drifts off.
         assert t.update((960.0, 360.0), FRAME) != []
 
-    def test_recenter_clears_settle(self):
-        t = make_tracker(settle_updates=10)
-        t.update((960.0, 360.0), FRAME)
-        t.recenter()
-        assert t.update((960.0, 360.0), FRAME) != []
+    def test_recenter_starts_settle_window(self):
+        # recenter() IS a move: the stream still shows the old pose for ~0.8 s,
+        # so the first post-recenter update must be held (not executed).
+        t = make_tracker(settle_updates=2)
+        t.update((960.0, 360.0), FRAME)  # move to start a settle
+        t.recenter()                      # another move — must start its own settle
+        assert t.update((960.0, 360.0), FRAME) == []  # still settling
 
     def test_settle_mode_measures_raw_center_after_each_move(self):
         # The pre-move smoothing history describes where the face WAS in the
@@ -238,3 +240,51 @@ class TestLostTarget:
         assert t.frames_since_face == 2
         t.update(CENTER, FRAME)
         assert t.frames_since_face == 0
+
+
+class TestRecenterSettle:
+    """recenter() starts a settle window so the first post-recenter update
+    does not measure the face against the old gimbal pose."""
+
+    def test_recenter_with_settle_holds_fire_on_immediate_update(self):
+        # After recenter, the stream still shows the pre-recenter pose; an
+        # immediate off-center update must return [] (hold fire).
+        t = make_tracker(settle_updates=2)
+        t.recenter()
+        assert t.update((960.0, 360.0), FRAME) == []
+
+    def test_recenter_with_settle_resumes_after_settle_updates(self):
+        # After settle_updates ticks the tracker must move again.
+        t = make_tracker(settle_updates=2)
+        t.recenter()
+        assert t.update((960.0, 360.0), FRAME) == []   # settling (1 of 2)
+        assert t.update((960.0, 360.0), FRAME) == []   # settling (2 of 2)
+        assert t.update((960.0, 360.0), FRAME) != []   # settled — moves
+
+    def test_settling_property_reflects_settle_window(self):
+        # settle_updates=2: recenter sets _settle_remaining=2; each update()
+        # call with a face decrements it, so it hits 0 after 2 updates.
+        t = make_tracker(settle_updates=2)
+        assert not t.settling
+        t.recenter()
+        assert t.settling           # 2 remaining
+        t.update((960.0, 360.0), FRAME)
+        assert t.settling           # 1 remaining
+        t.update((960.0, 360.0), FRAME)
+        assert not t.settling       # 0 remaining — settled
+        assert t.update((960.0, 360.0), FRAME) != []   # actually moves now
+
+    def test_settle_window_survives_lost_frames(self):
+        # recenter() fires DURING a lost streak; the settle window must not
+        # be wiped by subsequent lost-target ticks before reacquisition.
+        t = make_tracker(settle_updates=2, lost_recenter_after=1)
+        # First update: face visible so it moves (sets settle)
+        t.update((960.0, 360.0), FRAME)
+        # Two lost ticks: first one triggers recenter (lost_recenter_after=1),
+        # starting a fresh settle window; second one must not clear it.
+        t.update(None, FRAME)   # triggers recenter -> settle_remaining = 2
+        assert t.settling
+        t.update(None, FRAME)   # lost again — settle must survive
+        assert t.settling
+        # Reacquire: still inside the settle window.
+        assert t.update((960.0, 360.0), FRAME) == []

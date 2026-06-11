@@ -94,6 +94,11 @@ class GimbalTracker:
     def tilt_deg(self):
         return self._tilt.angle
 
+    @property
+    def settling(self):
+        """True while holding fire for the stream to catch up after a move."""
+        return self._settle_remaining > 0
+
     def start_commands(self):
         """Sync commands sent once at startup: drive both axes to home.
 
@@ -111,7 +116,10 @@ class GimbalTracker:
             axis.prev_error = None
             commands.append((axis.cfg.servo_id, axis.last_sent))
         self._smoothed_center = None
-        self._settle_remaining = 0
+        # A recenter IS a move: hold fire while the laggy stream catches up,
+        # or the first post-recenter update corrects against a frame still
+        # showing the old pose.
+        self._settle_remaining = self._settle_updates
         return commands
 
     def update(self, face_center, frame_size):
@@ -121,7 +129,10 @@ class GimbalTracker:
             self._pan.prev_error = None   # stale errors must not D-kick
             self._tilt.prev_error = None  # on reacquisition
             self._smoothed_center = None
-            self._settle_remaining = 0
+            # Do NOT clear _settle_remaining here: recenter() starts a settle
+            # window during a lost streak, and that window must survive into
+            # reacquisition so the first post-recenter frame is not measured
+            # against the old gimbal pose.
             if self.frames_since_face == self._lost_recenter_after:
                 return self.recenter()
             return []  # lost target: hold position

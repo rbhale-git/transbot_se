@@ -51,3 +51,32 @@ TRACKER = {
     "detect_width": 640,  # frames are downscaled to this width for detection
     "score_threshold": 0.7,
 }
+
+# ---- Person following (stage 2) ---------------------------------------------
+# Caps MIRROR robot/cmd_vel_mux.py — the mux is the enforcement point, these
+# are defense in depth. angular_sign/setpoints are starting values; the live
+# tuning session adjusts them (same process as the gimbal tracker's).
+FOLLOW = {
+    "target_class": "person",   # any COCO class: "person", "dog", ...
+    "score_threshold": 0.5,
+    "input_size": 640,          # YOLO letterbox size (drop to 416 if <10 fps)
+    "control_rate_hz": 10.0,
+    "status_rate_hz": 2.0,
+    # tracker
+    "min_iou": 0.2,
+    "lost_grace_s": 0.5,
+    # controller — angular: P on horizontal offset (err_x in [-0.5, 0.5])
+    "kp_ang": 2.0,              # rad/s per unit err_x
+    "deadband_x": 0.05,         # |err_x| below this is "centered"
+    "angular_sign": 1,          # flip to -1 if the robot turns AWAY (live check)
+    # controller — linear: P on bbox-height fraction vs setpoint
+    "height_setpoint": 0.55,    # bbox h / frame h at the desired follow distance
+    "deadband_h": 0.05,
+    "kp_lin": 1.2,              # m/s per unit height error
+    "smoothing": 0.5,           # EMA weight on previous (cx, h) estimate
+    # caps (mirror the mux) + blind-reverse limit
+    "cap_fwd": 0.25, "cap_rev": 0.12, "cap_ang": 1.2,
+    "reverse_limit_s": 1.5,     # max continuous blind reverse, then hold
+    # gimbal is FIXED during following; chassis does the turning
+    "gimbal_follow": {"pan": 90, "tilt": 22},
+}

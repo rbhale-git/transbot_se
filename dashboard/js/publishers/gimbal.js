@@ -61,9 +61,16 @@ export function setGimbalY(angleDeg) {
   notify();
 }
 
-/** Drive both axes back to their configured home angles. */
-export function recenterGimbal() {
-  state.x = publishAxis(GIMBAL.x, GIMBAL.x.home);
-  state.y = publishAxis(GIMBAL.y, GIMBAL.y.home);
+/** Drive both axes to a named pose from GIMBAL.poses. */
+export function gimbalPose(name) {
+  const pose = GIMBAL.poses[name];
+  if (!pose) return;
+  state.x = publishAxis(GIMBAL.x, pose.x);
+  state.y = publishAxis(GIMBAL.y, pose.y);
   notify();
+}
+
+/** Back to the driving (home) pose — the C key and CAMERA DRIVE button. */
+export function recenterGimbal() {
+  gimbalPose('drive');
 }

@@ -104,11 +104,18 @@ export const MOTION = {
 // direction doesn't match the operator's expectation. Absolute moves
 // (sliders, typed values, recenter) are unaffected.
 // Home pose chosen by the operator: pan 90, tilt 22. Reached via the C key
-// or the HOME button in the GIMBAL panel.
+// or the CAMERA DRIVE button in the GIMBAL panel.
 export const GIMBAL = {
   x: { servoId: 1, min: 0, max: 180, home: 90, invertStep: true },  // pan (verified on robot: + angle pans the "wrong" way for arrow keys)
-  y: { servoId: 2, min: 0, max: 180, home: 22, invertStep: false }, // tilt
+  y: { servoId: 2, min: 0, max: 115, home: 22, invertStep: false }, // tilt (max upward tilt per operator: 115)
   stepDeg: 3,
+};
+
+// Named camera poses — the preset buttons in the GIMBAL panel. DRIVE is the
+// home pose (also the C key and the assumed boot state); AP tilts up to 45.
+GIMBAL.poses = {
+  drive: { x: GIMBAL.x.home, y: GIMBAL.y.home },
+  ap: { x: GIMBAL.x.home, y: 45 },
 };
 
 /** +1 or -1 multiplier for relative steps on an axis. */

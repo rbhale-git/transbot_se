@@ -106,12 +106,12 @@ body::before {
 
 header { animation: boot-in 0.35s ease-out backwards; }
 .video-panel { animation: boot-in 0.4s ease-out 0.08s backwards; }
-.rail .panel:nth-child(1) { animation: boot-in 0.35s ease-out 0.14s backwards; }
-.rail .panel:nth-child(2) { animation: boot-in 0.35s ease-out 0.20s backwards; }
-.rail .panel:nth-child(3) { animation: boot-in 0.35s ease-out 0.26s backwards; }
-.rail .panel:nth-child(4) { animation: boot-in 0.35s ease-out 0.32s backwards; }
-.rail .panel:nth-child(5) { animation: boot-in 0.35s ease-out 0.38s backwards; }
-.rail .panel:nth-child(6) { animation: boot-in 0.35s ease-out 0.44s backwards; }
+.deck .panel:nth-child(1) { animation: boot-in 0.35s ease-out 0.14s backwards; }
+.deck .panel:nth-child(2) { animation: boot-in 0.35s ease-out 0.20s backwards; }
+.deck .panel:nth-child(3) { animation: boot-in 0.35s ease-out 0.26s backwards; }
+.deck .panel:nth-child(4) { animation: boot-in 0.35s ease-out 0.32s backwards; }
+.deck .panel:nth-child(5) { animation: boot-in 0.35s ease-out 0.38s backwards; }
+.deck .panel:nth-child(6) { animation: boot-in 0.35s ease-out 0.44s backwards; }
 footer { animation: boot-in 0.35s ease-out 0.5s backwards; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -297,27 +297,22 @@ body.link-down #video-stream { filter: grayscale(0.8) brightness(0.6); }
 
 /* ---- Layout ----------------------------------------------------------------------- */
 
+/* video on top, control deck beneath — every panel visible without scrolling */
 main {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 332px;
+  grid-template-rows: minmax(0, 1fr) auto;
   gap: 10px;
   padding: 10px 16px;
   min-height: 0;
 }
 
-.rail {
-  display: flex;
-  flex-direction: column;
+.deck {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 10px;
-  overflow-y: auto;
-  min-height: 0;
-  scrollbar-width: thin;
-  scrollbar-color: var(--line-bright) transparent;
+  align-items: stretch;
 }
-.rail::-webkit-scrollbar { width: 6px; }
-.rail::-webkit-scrollbar-thumb { background: var(--line-bright); }
-.rail::-webkit-scrollbar-track { background: transparent; }
 
 /* ---- Panels -------------------------------------------------------------------------- */
 
@@ -411,12 +406,12 @@ main {
 }
 
 /* the stage IS the viewport: aspect-locked to the stream (default 4:3,
-   updated from the stream's real dimensions by video.js), as large as the
-   pane allows in both axes */
+   updated from the stream's real dimensions by video.js). Height-driven:
+   the top pane is wide and short, so the vertical axis is the constraint */
 .video-stage {
   position: relative;
-  width: 100%;
-  max-height: 100%;
+  height: 100%;
+  max-width: 100%;
   aspect-ratio: 4 / 3;
   display: flex;
   align-items: center;

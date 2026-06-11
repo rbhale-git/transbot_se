@@ -9,7 +9,9 @@ import {
 } from './config.js';
 import { connect, onStatus } from './ros.js';
 import { onMotionCommand } from './publishers/motion.js';
-import { onGimbalChange, setGimbalX, setGimbalY, recenterGimbal } from './publishers/gimbal.js';
+import {
+  onGimbalChange, setGimbalX, setGimbalY, recenterGimbal, gimbalPose,
+} from './publishers/gimbal.js';
 import {
   onArmChange, setArmJoint, armHome, armReady, armStow, cancelArmSequence,
 } from './publishers/arm.js';
@@ -255,8 +257,12 @@ function initGimbalPanel() {
     dot.style.left = `${px}%`;
     dot.style.top = `${py}%`;
   });
-  $('gimbal-home-btn').addEventListener('click', (e) => {
+  $('gimbal-drive-btn').addEventListener('click', (e) => {
     recenterGimbal();
+    e.target.blur(); // keep focus free for driving keys
+  });
+  $('gimbal-ap-btn').addEventListener('click', (e) => {
+    gimbalPose('ap');
     e.target.blur(); // keep focus free for driving keys
   });
 }

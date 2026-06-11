@@ -73,8 +73,8 @@
       </div>
     </section>
 
-    <!-- Telemetry rail -->
-    <aside class="rail">
+    <!-- Control deck: every panel visible at a glance, no scrolling -->
+    <div class="deck">
 
       <section id="drive-panel" class="panel" aria-label="drive">
         <div class="panel-title"><span class="num">01</span>DRIVE</div>
@@ -125,7 +125,10 @@
           </div>
           <input type="range" id="gimbal-y-slider" class="ctl-slider">
         </div>
-        <button id="gimbal-home-btn" class="panel-btn" title="recenter gimbal to the home pose (same as C key)">&#8962; GIMBAL HOME</button>
+        <div class="btn-row">
+          <button id="gimbal-drive-btn" class="panel-btn" title="driving pose: pan centered, tilt 22&deg; (same as C key)">&#8962; CAMERA DRIVE</button>
+          <button id="gimbal-ap-btn" class="panel-btn" title="AP pose: pan centered, tilt up to 45&deg;">&#9650; CAMERA AP</button>
+        </div>
       </section>
 
       <section id="arm-panel" class="panel" aria-label="arm">
@@ -177,7 +180,7 @@
         <div class="kv"><span>BEHAVIOR</span><code id="ai-behavior" class="dim small">--</code></div>
       </section>
 
-    </aside>
+    </div>
   </main>
 
   <footer>

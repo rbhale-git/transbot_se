@@ -22,8 +22,9 @@ from pathlib import Path
 import cv2
 
 from ai import config
+from ai.common.connect import connect_with_actuation_check
 from ai.common.safety import RateLimiter
-from ai.common.video import VideoSource, frames_differ
+from ai.common.video import VideoSource
 from ai.face_tracking.detector import YuNetDetector, select_primary
 from ai.face_tracking.tracker import GimbalTracker
 
@@ -113,37 +114,6 @@ def draw_overlay(frame, face, tracker, sending, paused):
                 0.55, (0, 255, 255), 1, cv2.LINE_AA)
 
 
-def connect_with_actuation_check(url, src, tilt_cfg, attempts=3):
-    """Connect to rosbridge and PROVE commands reach the servos.
-
-    The robot's old rosbridge can half-fail its publisher registration and
-    silently drop every command for the session's lifetime (seen on two
-    boots; docs/AI_NOTEBOOK.md). No error reaches the websocket client, so
-    the only honest check is end-to-end: wiggle the tilt servo and verify
-    the camera view changed. A fresh session re-registers cleanly, so on
-    failure we reconnect and try again.
-    """
-    for attempt in range(1, attempts + 1):
-        sink = RosSink(url)
-        before = src.read(timeout_s=3.0)
-        sink.send(tilt_cfg.servo_id, tilt_cfg.home_deg + 25)
-        time.sleep(1.8)
-        after = src.read(timeout_s=3.0)
-        sink.send(tilt_cfg.servo_id, tilt_cfg.home_deg)
-        time.sleep(1.0)
-        if before is not None and after is not None and frames_differ(before, after):
-            print(f"actuation check passed (attempt {attempt})")
-            return sink
-        print(f"actuation check FAILED on attempt {attempt}: commands are not "
-              "reaching the gimbal (known rosbridge dropped-session bug) - "
-              "reconnecting with a fresh session")
-        sink.disconnect()  # close() would kill the reactor for good
-        time.sleep(2.0)
-    raise RuntimeError(
-        "gimbal did not respond after %d fresh rosbridge sessions - "
-        "check the robot (journalctl -u rosbridge-dashboard.service)" % attempts)
-
-
 def main(argv=None):
     args = parse_args(argv)
     profile = config.PROFILES[args.profile]
@@ -184,7 +154,7 @@ def main(argv=None):
                 sink = DryRunSink()
             else:
                 sink = connect_with_actuation_check(
-                    profile["rosbridge_url"], src, tilt_cfg)
+                    lambda: RosSink(profile["rosbridge_url"]), src, tilt_cfg)
 
             # Sync: drive the gimbal to home so tracker state matches reality.
             for servo_id, angle in tracker.start_commands():

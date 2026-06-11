@@ -1,7 +1,5 @@
 """FollowController: P-control with caps, deadbands, and the reverse limit."""
 
-import dataclasses
-
 from ai.common.detection import Detection
 from ai.person_following.controller import FollowController
 

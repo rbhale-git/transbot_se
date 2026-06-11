@@ -1,5 +1,7 @@
 """FollowController: P-control with caps, deadbands, and the reverse limit."""
 
+import math
+
 import pytest
 from ai.common.detection import Detection
 from ai.person_following.controller import FollowController
@@ -119,9 +121,11 @@ def test_no_drive_past_90_deg_bearing():
     c = FollowController(cfg())
     lin, _ = c.update(target(0.5, 0.20), FRAME, now=0.0, pan_offset_deg=-97.0)
     assert lin == 0.0
+    assert math.copysign(1.0, lin) == 1.0   # +0.0, not -0.0
     c.reset()
     lin, _ = c.update(target(0.5, 0.95), FRAME, now=1.0, pan_offset_deg=-97.0)
     assert lin == 0.0
+    assert math.copysign(1.0, lin) == 1.0   # +0.0, not -0.0
 
 
 def test_cap_holds_for_fused_error_past_old_range():

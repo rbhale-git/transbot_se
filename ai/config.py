@@ -102,6 +102,7 @@ FOLLOW = {
     "pan_sign": GIMBAL_PAN.sign,
     # GimbalTracker params while following — stage-1 move-and-settle values
     # (TRACKER block above), rehomed to the follow pose by the runner.
+    # (no kp here: per-axis gains live on the AxisConfigs above)
     "gimbal_track": {
         "kd_deg": 0.0,
         "deadband": 0.06,

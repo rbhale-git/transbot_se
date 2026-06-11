@@ -4,19 +4,22 @@ Angular: P on the target's total bearing — image offset plus the gimbal's
 pan offset from its follow-pose home. The sum is invariant to gimbal moves
 (a pan toward the person shrinks the image error by exactly what the pan
 offset grows), so the chassis loop is decoupled from the gimbal's settle
-cycle. With the gimbal parked (--fixed-gimbal) steering reduces to plain P on the image offset; the linear term keeps its cos(image-bearing) scaling. Linear: P on
-bbox-height fraction vs the follow-distance setpoint; height is the distance
-proxy (bigger box = closer), scaled by cos(bearing) so the robot never drives hard while the person is far off-axis. Both have deadbands so a centered, at-distance
-target commands exact zeros (no idle creep).
+cycle. With the gimbal parked (--fixed-gimbal) steering reduces to plain P
+on the image offset; the linear term keeps its cos(image-bearing) scaling.
+Linear: P on bbox-height fraction vs the follow-distance setpoint; height
+is the distance proxy (bigger box = closer), scaled by cos(bearing) so the
+robot never drives hard while the person is far off-axis. Both have
+deadbands so a centered, at-distance target commands exact zeros (no idle
+creep).
 
-Safety (spec): outputs clamped to the same caps the mux enforces (defense in
-depth); reverse is additionally time-limited — the robot has no rear
-sensors, so after reverse_limit_s of continuous backing it holds still until
-the demand goes non-negative (target stepped back / moved away).
+Safety (spec): outputs clamped to the same caps the mux enforces (defense
+in depth); reverse is additionally time-limited — the robot has no rear
+sensors, so after reverse_limit_s of continuous backing it holds still
+until the demand goes non-negative (target stepped back / moved away).
 
 Latency note: the command->stream loop is ~0.8 s blind (measured, stage 1).
-Gains here start LOW; if the chassis limit-cycles live, the tuning ladder is
-EMA smoothing -> lower gains -> stage-1 move-and-settle pattern.
+Gains here start LOW; if the chassis limit-cycles live, the tuning ladder
+is EMA smoothing -> lower gains -> stage-1 move-and-settle pattern.
 """
 
 import math

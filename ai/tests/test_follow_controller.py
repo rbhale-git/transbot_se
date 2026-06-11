@@ -1,5 +1,6 @@
 """FollowController: P-control with caps, deadbands, and the reverse limit."""
 
+import pytest
 from ai.common.detection import Detection
 from ai.person_following.controller import FollowController
 
@@ -10,7 +11,8 @@ def cfg(**over):
     base = dict(kp_ang=2.0, deadband_x=0.05, angular_sign=1,
                 height_setpoint=0.55, deadband_h=0.05, kp_lin=1.2,
                 smoothing=0.0,   # EMA off in unit tests: pure P response
-                cap_fwd=0.25, cap_rev=0.12, cap_ang=1.2, reverse_limit_s=1.5)
+                cap_fwd=0.25, cap_rev=0.12, cap_ang=1.2, reverse_limit_s=1.5,
+                deg_per_errx=97.0, pan_sign=-1)
     base.update(over)
     return base
 
@@ -71,3 +73,52 @@ def test_deadbands():
     c = FollowController(cfg())
     lin, ang = c.update(target(0.52, 0.57), FRAME, now=0.0)  # inside both bands
     assert (lin, ang) == (0.0, 0.0)
+
+
+def test_pan_offset_alone_turns_chassis():
+    # Camera panned toward a person on the right (pan sign -1: offset is
+    # negative), image centered: the chassis must still turn right (ang < 0)
+    # to square up — "always re-center" per the spec.
+    c = FollowController(cfg())
+    _, ang = c.update(target(0.5, 0.55), FRAME, now=0.0, pan_offset_deg=-20.0)
+    assert ang < 0
+
+
+def test_bearing_invariant_to_gimbal_moves():
+    # The same physical bearing split two ways must command the same turn:
+    # all in the image (gimbal centered) vs partly absorbed by a 20 deg pan.
+    c1 = FollowController(cfg())
+    _, ang_image = c1.update(target(0.8, 0.55), FRAME, now=0.0)
+    c2 = FollowController(cfg())
+    _, ang_split = c2.update(target(0.8 - 20.0 / 97.0, 0.55), FRAME, now=0.0,
+                             pan_offset_deg=-20.0)
+    assert ang_split == pytest.approx(ang_image)
+
+
+def test_deadband_applies_to_total_bearing():
+    # Small pan offset + centered image = "facing them": no turn.
+    # 4 deg / 97 = 0.041 err units, inside the 0.05 deadband.
+    c = FollowController(cfg())
+    _, ang = c.update(target(0.5, 0.55), FRAME, now=0.0, pan_offset_deg=-4.0)
+    assert ang == 0.0
+
+
+def test_forward_scaled_down_at_large_bearing():
+    # Far target square ahead vs the same target 60 deg off to the side:
+    # forward speed must drop (cos scaling) but not necessarily to zero.
+    c = FollowController(cfg())
+    lin_square, _ = c.update(target(0.5, 0.20), FRAME, now=0.0)
+    c.reset()
+    lin_offaxis, _ = c.update(target(0.5, 0.20), FRAME, now=1.0,
+                              pan_offset_deg=-60.0)
+    assert 0 <= lin_offaxis < lin_square
+
+
+def test_no_drive_past_90_deg_bearing():
+    # cos floor: beyond 90 deg of bearing, no forward AND no reverse.
+    c = FollowController(cfg())
+    lin, _ = c.update(target(0.5, 0.20), FRAME, now=0.0, pan_offset_deg=-97.0)
+    assert lin == 0.0
+    c.reset()
+    lin, _ = c.update(target(0.5, 0.95), FRAME, now=1.0, pan_offset_deg=-97.0)
+    assert lin == 0.0

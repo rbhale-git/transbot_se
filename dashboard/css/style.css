@@ -395,6 +395,11 @@ main {
 
 .video-panel { display: flex; flex-direction: column; min-height: 0; }
 
+/* stream controls live in the camera panel's title row */
+.video-panel .panel-title { display: flex; align-items: center; }
+.video-panel .vbtn { margin-left: 8px; letter-spacing: 1px; }
+.video-panel .vbtn:first-of-type { margin-left: auto; }
+
 /* outer frame: invisible centering container — the letterbox area shows the
    quiet panel background instead of a dead black void */
 .video-frame {

@@ -21,20 +21,30 @@ export const PROFILES = {
     // ever reassigns it, the OLED shows the current IP (consider a router
     // DHCP reservation for the robot's MAC to pin it).
     rosbridgeUrl: 'ws://192.168.0.109:9090',
-    // Dashboard view is downscaled server-side (width/height/quality params):
-    // the camera captures 720p, but encoding full 720p per client saturates
-    // the Nano (load ~6 on 4 cores) and stream latency creeps up — measured
-    // live 2026-06-11 while an AI behavior consumed a second stream. 480p is
-    // plenty for monitoring; AI behaviors request their own downscaled feed.
-    videoUrl: 'http://192.168.0.109:8080/stream?topic=/usb_cam/image_raw&type=mjpeg&width=640&height=480&quality=50',
+    videoUrl: 'http://192.168.0.109:8080/stream?topic=/usb_cam/image_raw&type=mjpeg',
   },
   hotspot: {
     label: 'ROBOT HOTSPOT',
     // Verified: robot is the gateway at 192.168.1.11 on its own "Transbot"
     // AP (WPA2, SSID "Transbot"). Camera topic /image per FINDINGS.md.
     rosbridgeUrl: 'ws://192.168.1.11:9090',
-    videoUrl: 'http://192.168.1.11:8080/stream?topic=/usb_cam/image_raw&type=mjpeg&width=640&height=480&quality=50',
+    videoUrl: 'http://192.168.1.11:8080/stream?topic=/usb_cam/image_raw&type=mjpeg',
   },
+};
+
+// ---- Video stream presets ----------------------------------------------------
+// web_video_server re-encodes the stream PER CLIENT; serving full 720p
+// saturates the Nano (load ~6 on 4 cores, measured 2026-06-11) and stream
+// latency creeps up over a session. The dashboard therefore defaults to a
+// downscaled SD feed, with an HD button for when picture quality matters
+// (driving), and a stream on/off switch to free the Nano entirely while an
+// AI behavior owns its own feed. Params are appended to the profile videoUrl.
+export const VIDEO = {
+  presets: {
+    sd: { label: 'SD', params: '&width=640&height=480&quality=50' },
+    hd: { label: 'HD', params: '' }, // native capture (1280x720)
+  },
+  defaultPreset: 'sd',
 };
 
 export const DEFAULT_PROFILE = 'mock';

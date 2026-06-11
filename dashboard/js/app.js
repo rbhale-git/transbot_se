@@ -5,6 +5,7 @@
 
 import {
   PROFILES, DEFAULT_PROFILE, MOTION, POWER, TELEMETRY, KEYS, GIMBAL, ARM,
+  VIDEO,
 } from './config.js';
 import { connect, onStatus } from './ros.js';
 import { onMotionCommand } from './publishers/motion.js';
@@ -14,7 +15,9 @@ import {
 } from './publishers/arm.js';
 import { initKeyboard, onEStop } from './keyboard.js';
 import { initTelemetry, onTelemetry } from './telemetry.js';
-import { initVideo, setVideoUrl, kickVideo } from './video.js';
+import {
+  initVideo, setVideoUrl, kickVideo, setStreamParams, setStreamEnabled,
+} from './video.js';
 import { loadSettings, applySetting, resetSettings, SETTING_DEFS } from './settings.js';
 import { initGamepad, onPadStatus } from './gamepad.js';
 import { initLatency, onLatency } from './latency.js';
@@ -126,6 +129,29 @@ function initImuOverlay() {
     $('hud-imu').classList.toggle(
       'stale', performance.now() - lastAt > TELEMETRY.staleAfterMs);
   }, 1000);
+}
+
+// ---- Video stream controls (camera panel title row) ---------------------------
+// STREAM on/off frees a Nano encoder while an AI behavior runs; SD/HD trades
+// picture quality against robot CPU (see VIDEO in config.js).
+
+function initVideoControls() {
+  let on = true;
+  let preset = VIDEO.defaultPreset;
+
+  const apply = () => {
+    setStreamEnabled(on);
+    setStreamParams(VIDEO.presets[preset].params);
+    $('video-power-btn').textContent = on ? 'STREAM: ON' : 'STREAM: OFF';
+    $('video-quality-btn').textContent = VIDEO.presets[preset].label;
+    $('video-quality-btn').disabled = !on;
+  };
+  $('video-power-btn').addEventListener('click', () => { on = !on; apply(); });
+  $('video-quality-btn').addEventListener('click', () => {
+    preset = preset === 'sd' ? 'hd' : 'sd';
+    apply();
+  });
+  apply();
 }
 
 // ---- FPS counter (bottom-left of the camera stage) -----------------------------
@@ -379,6 +405,7 @@ function initLegend() {
 // ---- Boot ---------------------------------------------------------------------
 
 initVideo($('video-stream'), $('video-nosignal'));
+initVideoControls();
 initTelemetry();
 initKeyboard();
 initGamepad();

@@ -44,7 +44,10 @@
   <main>
     <!-- Video pane -->
     <section class="panel video-panel" aria-label="camera">
-      <div class="panel-title"><span class="num">00</span>CAMERA</div>
+      <div class="panel-title"><span class="num">00</span>CAMERA
+        <button id="video-power-btn" class="hbtn vbtn" title="stream on/off — each stream costs the robot CPU; switch off while an AI behavior runs">STREAM: ON</button>
+        <button id="video-quality-btn" class="hbtn vbtn" title="SD (low robot load) / HD (full 720p for driving)">SD</button>
+      </div>
       <div class="video-frame">
         <!-- the stage locks to the stream's true aspect ratio, so the bezel,
              brackets, and HUD always hug the actual picture -->

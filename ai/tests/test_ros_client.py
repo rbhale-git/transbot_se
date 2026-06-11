@@ -5,7 +5,21 @@ transbot_msgs/PWMServo = {int32 id, int32 angle}.
 Connection handling itself is exercised live, not unit-tested.
 """
 
-from ai.common.ros_client import PWM_SERVO_TOPIC, PWM_SERVO_TYPE, pwm_servo_message
+from ai.common.ros_client import (
+    PWM_SERVO_TOPIC,
+    PWM_SERVO_TYPE,
+    pwm_servo_message,
+    twist_message,
+)
+
+
+class TestTwistMessage:
+    def test_twist_message_shape(self):
+        msg = twist_message(0.25, -1.2)
+        assert msg == {
+            "linear": {"x": 0.25, "y": 0.0, "z": 0.0},
+            "angular": {"x": 0.0, "y": 0.0, "z": -1.2},
+        }
 
 
 class TestPwmServoMessage:

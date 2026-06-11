@@ -6,33 +6,12 @@ normalizes output to a list of Detection bboxes; select_primary() picks the
 face to track (largest, i.e. closest).
 """
 
-from dataclasses import dataclass
-
 import cv2
 
+from ai.common.detection import Detection, select_largest
 
-@dataclass
-class Detection:
-    x: float
-    y: float
-    w: float
-    h: float
-    score: float
-
-    @property
-    def area(self):
-        return self.w * self.h
-
-    @property
-    def center(self):
-        return (self.x + self.w / 2.0, self.y + self.h / 2.0)
-
-
-def select_primary(detections):
-    """The face to track: largest bbox (closest to the camera), or None."""
-    if not detections:
-        return None
-    return max(detections, key=lambda d: d.area)
+# Backwards-compatible alias: stage-1 code and tests use select_primary.
+select_primary = select_largest
 
 
 class YuNetDetector:

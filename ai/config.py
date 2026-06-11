@@ -89,6 +89,25 @@ FOLLOW = {
     # caps (mirror the mux) + blind-reverse limit
     "cap_fwd": 0.25, "cap_rev": 0.12, "cap_ang": 1.2,
     "reverse_limit_s": 1.5,     # max continuous blind reverse, then hold
-    # gimbal is FIXED during following; chassis does the turning
+    # Follow pose: the gimbal tracker's HOME while following (and the park
+    # pose under --fixed-gimbal). Same values as the axis-config home today,
+    # but sourced here so they can diverge.
     "gimbal_follow": {"pan": 90, "tilt": 22},
+    # Bearing fusion (spec 2026-06-11): chassis steers on total bearing =
+    # image err_x + pan_sign * pan_offset / deg_per_errx. deg_per_errx
+    # converts servo degrees to err_x units: measured pan calibration is
+    # 48.5 deg per half-frame error unit (range +/-1); err_x spans +/-0.5,
+    # so 2 x 48.5 = 97 deg per err_x unit.
+    "deg_per_errx": 97.0,
+    "pan_sign": GIMBAL_PAN.sign,
+    # GimbalTracker params while following — stage-1 move-and-settle values
+    # (TRACKER block above), rehomed to the follow pose by the runner.
+    "gimbal_track": {
+        "kd_deg": 0.0,
+        "deadband": 0.06,
+        "max_step_deg": 20.0,
+        "smoothing": 0.5,
+        "settle_updates": 11,        # hold fire ~1.1 s after each move
+        "lost_recenter_after": 50,   # ~5 s lost at 10 Hz -> back to follow pose
+    },
 }

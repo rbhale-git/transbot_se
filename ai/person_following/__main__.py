@@ -5,6 +5,9 @@ Locks onto the largest target-class detection (person by default, dog via
 distance. Publishes /ai/cmd_vel — the robot-side mux forwards it only while
 the dashboard's AI switch is ARMED and the joystick is quiet, clamped to the
 AI caps. Lost target => zeros (and the mux + watchdog back that up).
+The gimbal tracks the person too (fast, move-and-settle) and the chassis
+steers on the total bearing — see the 2026-06-11 spec. --fixed-gimbal
+restores the parked-gimbal behavior for A/B comparison.
 
 Run modes (test offline first, per the plan):
   python -m ai.person_following --source clip.avi --dry-run   # recorded video
@@ -18,6 +21,7 @@ zeros while paused).
 """
 
 import argparse
+import dataclasses
 import sys
 import time
 from pathlib import Path
@@ -28,6 +32,7 @@ from ai import config
 from ai.common.connect import connect_with_actuation_check
 from ai.common.safety import RateLimiter
 from ai.common.video import VideoSource
+from ai.face_tracking.tracker import GimbalTracker
 from ai.person_following.controller import FollowController
 from ai.person_following.detector import YoloDetector
 from ai.person_following.tracker import TargetTracker
@@ -104,6 +109,9 @@ def parse_args(argv):
                    help='COCO class to follow (e.g. "person", "dog")')
     p.add_argument("--cap-scale", type=float, default=1.0,
                    help="scale ALL output caps (0.5 for the first live run)")
+    p.add_argument("--fixed-gimbal", action="store_true",
+                   help="park the gimbal at the follow pose instead of "
+                        "tracking the person with it (pre-spec behavior)")
     p.add_argument("--kp-ang", type=float, default=f["kp_ang"])
     p.add_argument("--kp-lin", type=float, default=f["kp_lin"])
     p.add_argument("--height-setpoint", type=float, default=f["height_setpoint"])
@@ -113,7 +121,16 @@ def parse_args(argv):
     return p.parse_args(argv)
 
 
-def draw_overlay(frame, dets, target, tracker, lin, ang, armed, dry_run, paused):
+def send_servo_commands(sink, commands):
+    """Send /PWMServo commands, paced — the driver drops back-to-back sends."""
+    for i, (servo_id, angle) in enumerate(commands):
+        if i:
+            time.sleep(0.15)
+        sink.send(servo_id, angle)
+
+
+def draw_overlay(frame, dets, target, tracker, gimbal, lin, ang, armed,
+                 dry_run, paused):
     h, w = frame.shape[:2]
     cv2.drawMarker(frame, (w // 2, h // 2), (0, 255, 255), cv2.MARKER_CROSS, 24, 1)
     for d in dets:
@@ -124,7 +141,8 @@ def draw_overlay(frame, dets, target, tracker, lin, ang, armed, dry_run, paused)
                     cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1, cv2.LINE_AA)
     mode = "PAUSED" if paused else tracker.state
     arm_txt = "DRY RUN" if dry_run else ("ARMED" if armed else "disarmed")
-    status = f"{mode}  lin {lin:+.2f}  ang {ang:+.2f}  [{arm_txt}]"
+    status = (f"{mode}  lin {lin:+.2f}  ang {ang:+.2f}  "
+              f"pan {gimbal.pan_deg:5.1f} tilt {gimbal.tilt_deg:5.1f}  [{arm_txt}]")
     cv2.putText(frame, status, (10, h - 12), cv2.FONT_HERSHEY_SIMPLEX,
                 0.55, (0, 255, 255), 1, cv2.LINE_AA)
 
@@ -148,6 +166,18 @@ def main(argv=None):
                             input_size=f["input_size"])
     tracker = TargetTracker(min_iou=f["min_iou"], lost_grace_s=f["lost_grace_s"])
     controller = FollowController(f)
+    # Fast inner loop: the gimbal keeps the person in frame between chassis
+    # corrections. Rehomed to the follow pose; stage-1 move-and-settle params.
+    gt = f["gimbal_track"]
+    gimbal = GimbalTracker(
+        pan=dataclasses.replace(config.GIMBAL_PAN,
+                                home_deg=f["gimbal_follow"]["pan"]),
+        tilt=dataclasses.replace(config.GIMBAL_TILT,
+                                 home_deg=f["gimbal_follow"]["tilt"]),
+        kp_deg=config.TRACKER["kp_deg"], kd_deg=gt["kd_deg"],
+        deadband=gt["deadband"], max_step_deg=gt["max_step_deg"],
+        lost_recenter_after=gt["lost_recenter_after"],
+        smoothing=gt["smoothing"], settle_updates=gt["settle_updates"])
     control_gate = RateLimiter(min_interval_s=1.0 / f["control_rate_hz"])
     status_gate = RateLimiter(min_interval_s=1.0 / f["status_rate_hz"])
 
@@ -171,10 +201,10 @@ def main(argv=None):
             else:
                 sink = connect_with_actuation_check(
                     lambda: RosSink(profile["rosbridge_url"]), src, config.GIMBAL_TILT)
-                # Park the gimbal at the follow pose: chassis does the turning.
-                sink.send(config.GIMBAL_PAN.servo_id, f["gimbal_follow"]["pan"])
-                time.sleep(0.2)  # pace the two servo commands (driver quirk)
-                sink.send(config.GIMBAL_TILT.servo_id, f["gimbal_follow"]["tilt"])
+
+            # Sync: drive the gimbal to the follow pose so tracker state
+            # matches reality (the driver does not echo servo positions).
+            send_servo_commands(sink, gimbal.start_commands())
 
             paused = False
             while True:
@@ -198,7 +228,16 @@ def main(argv=None):
                 if control_gate.ready():
                     now = time.monotonic()
                     target = tracker.update(dets, now) if not paused else None
-                    lin, ang = controller.update(target, (w, h), now)
+                    if not paused and not args.fixed_gimbal:
+                        # Gimbal tracks whenever a target is locked, armed or
+                        # not — arming gates chassis motion only. On loss it
+                        # holds (best relock odds), then recenters to the
+                        # follow pose after ~5 s (GimbalTracker built-in).
+                        center = target.center if target is not None else None
+                        send_servo_commands(sink, gimbal.update(center, (w, h)))
+                    lin, ang = controller.update(
+                        target, (w, h), now,
+                        pan_offset_deg=gimbal.pan_deg - f["gimbal_follow"]["pan"])
                     # Publish continuously while armed: a steady stream (zeros
                     # included) keeps the mux/watchdog state machines quiet.
                     if sink.armed:
@@ -218,7 +257,7 @@ def main(argv=None):
                     recorder.write(frame)
 
                 if not args.no_preview:
-                    draw_overlay(frame, dets, target, tracker, lin, ang,
+                    draw_overlay(frame, dets, target, tracker, gimbal, lin, ang,
                                  getattr(sink, "armed", False), args.dry_run, paused)
                     cv2.imshow("transbot person following", frame)
                     key = cv2.waitKey(1) & 0xFF

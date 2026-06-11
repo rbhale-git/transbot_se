@@ -62,3 +62,15 @@ class TestYuNetDetector:
         # Known face center in OpenCV's lena.jpg, generous tolerance.
         assert abs(cx - 281) < 40 and abs(cy - 286) < 40
         assert dets[0].score > 0.8
+
+
+class TestDetectionPoint:
+    def test_point_center_matches_center_property(self):
+        d = det(10, 20, 100, 200)
+        assert d.point(0.5, 0.5) == d.center
+
+    def test_point_upper_body_aim(self):
+        # fy=0.2 from the bbox TOP: the gimbal aim point for a person
+        # (face/upper chest) instead of the geometric center.
+        d = det(10, 20, 100, 200)
+        assert d.point(0.5, 0.2) == (60.0, 60.0)

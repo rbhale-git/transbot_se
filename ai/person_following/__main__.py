@@ -229,9 +229,13 @@ def main(argv=None):
                         # not — arming gates chassis motion only. On loss it
                         # holds (best relock odds), then recenters to the
                         # follow pose after ~5 s (GimbalTracker built-in).
-                        center = target.center if target is not None else None
+                        # Aim above bbox center (face/chest): the center of a
+                        # close, edge-clipped person never leaves the tilt
+                        # deadband, so the gimbal would pan but never tilt.
+                        aim = (target.point(0.5, gt["aim_y"])
+                               if target is not None else None)
                         pan_before = gimbal.pan_deg
-                        moves = gimbal.update(center, (w, h))
+                        moves = gimbal.update(aim, (w, h))
                         if moves:
                             # Frames stay blind to this move for ~0.8 s; fuse
                             # the bearing with the pose the frames DO show.

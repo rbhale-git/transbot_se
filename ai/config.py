@@ -110,5 +110,9 @@ FOLLOW = {
         "smoothing": 0.5,
         "settle_updates": 11,        # hold fire ~1.1 s after each move
         "lost_recenter_after": 50,   # ~5 s lost at 10 Hz -> back to follow pose
+        # Aim point as a fraction of the bbox from its TOP (0.5 = center).
+        # A close person's bbox clips at the frame edges so its center stays
+        # mid-frame and tilt never engages; 0.2 aims at the face/upper chest.
+        "aim_y": 0.2,
     },
 }

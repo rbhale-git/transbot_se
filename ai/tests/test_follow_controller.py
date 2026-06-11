@@ -122,3 +122,13 @@ def test_no_drive_past_90_deg_bearing():
     c.reset()
     lin, _ = c.update(target(0.5, 0.95), FRAME, now=1.0, pan_offset_deg=-97.0)
     assert lin == 0.0
+
+
+def test_cap_holds_for_fused_error_past_old_range():
+    # Fused error can reach ~1.43 (err_x 0.5 + 90 deg pan) — triple the old
+    # +/-0.5 input range. The cap is the only guard; pin it.
+    # (pan_offset -97 deg exceeds the physical +/-90 — deliberately
+    # unphysical to exercise saturation.)
+    c = FollowController(cfg())
+    _, ang = c.update(target(0.99, 0.55), FRAME, now=0.0, pan_offset_deg=-97.0)
+    assert ang == -1.2

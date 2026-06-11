@@ -4,10 +4,9 @@ Angular: P on the target's total bearing — image offset plus the gimbal's
 pan offset from its follow-pose home. The sum is invariant to gimbal moves
 (a pan toward the person shrinks the image error by exactly what the pan
 offset grows), so the chassis loop is decoupled from the gimbal's settle
-cycle. With the gimbal parked (--fixed-gimbal) it reduces to plain P on the
-image offset, today's live-tuned behavior. Linear: P on
+cycle. With the gimbal parked (--fixed-gimbal) steering reduces to plain P on the image offset; the linear term keeps its cos(image-bearing) scaling. Linear: P on
 bbox-height fraction vs the follow-distance setpoint; height is the distance
-proxy (bigger box = closer). Both have deadbands so a centered, at-distance
+proxy (bigger box = closer), scaled by cos(bearing) so the robot never drives hard while the person is far off-axis. Both have deadbands so a centered, at-distance
 target commands exact zeros (no idle creep).
 
 Safety (spec): outputs clamped to the same caps the mux enforces (defense in
@@ -72,6 +71,7 @@ class FollowController:
             lin = cfg["kp_lin"] * err_h
         lin *= max(0.0, math.cos(math.radians(err_total * cfg["deg_per_errx"])))
         lin = min(cfg["cap_fwd"], max(-cfg["cap_rev"], lin))
+        lin = lin if lin else 0.0   # cos floor can leave -0.0; don't publish it
 
         # Blind-reverse time limit.
         if lin < 0:

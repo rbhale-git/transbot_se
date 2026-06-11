@@ -103,9 +103,11 @@ sudo nmcli con up Transbot    # start the hotspot AP
 - [x] Phase 5 — docs
 - [x] AI stage 1 — face detection + gimbal tracking, live-calibrated
       (`python -m ai.face_tracking`; notebook: `docs/GIMBAL_TRACKING_NOTEBOOK.md`)
-- [ ] AI stage 2 — person following + safety prerequisites (command-priority
-      mux, dashboard arm/disarm panel); approved design:
-      `docs/superpowers/specs/2026-06-10-person-following-design.md`
+- [x] AI stage 2 — person following + safety prerequisites, live-validated
+      indoors 2026-06-11 (robot-side `cmd_vel_mux`, dashboard AI panel,
+      YOLO11n follower; notebook: `docs/PERSON_FOLLOWING_NOTEBOOK.md`).
+      Remaining: open-space validation at full caps (see the plan's
+      execution-status section)
 
 ## Quick start (real robot)
 
@@ -276,8 +278,17 @@ run untethered.
 pip install -r ai/requirements.txt
 python -m ai.face_tracking        # stage 1: face-tracking gimbal (q quit, c home, t pause)
 python -m ai.face_tracking.calibrate   # re-measure loop latency + per-axis gains
+python -m ai.person_following     # stage 2: follow a person (ARM on the dashboard first)
+python -m ai.person_following --target-class dog --cap-scale 0.5
 python -m pytest ai/tests
 ```
+
+Stage 2 is the first behavior that drives the chassis. Safety chain: the AI
+publishes `/ai/cmd_vel`; the robot-side `cmd_vel_mux` (sole publisher of
+`/cmd_vel`) forwards it only while the dashboard's AI panel is ARMED and the
+joystick is quiet, clamped to AI caps (0.25 m/s fwd / 0.12 rev / 1.2 rad/s);
+any joystick input takes over instantly; SPACE e-stops AND disarms; the
+`cmd_vel` watchdog remains the last line of defense underneath it all.
 
 Layout: `ai/common/` (MJPEG client, rosbridge client, safety primitives —
 shared by every behavior), `ai/face_tracking/` (YuNet detector +
@@ -290,11 +301,10 @@ Engineering notes live in `docs/` notebook-style: `docs/AI_NOTEBOOK.md`
 control over a ~0.8 s blind video loop, measured constants, calibration
 method).
 
-**Staged roadmap:** ① face-tracking gimbal — done; ② person following
-(YOLO-based, with a robot-side command-priority mux + dashboard AI
-arm/disarm panel as safety prerequisites — design approved, see
-`docs/superpowers/specs/`); ③ ArUco waypoint navigation; ④ autonomous
-pick-and-place built on the READY/STOW pose primitives.
+**Staged roadmap:** ① face-tracking gimbal — done; ② person following —
+done (indoor validation; open-space run pending); ③ ArUco waypoint
+navigation; ④ autonomous pick-and-place built on the READY/STOW pose
+primitives.
 
 ## Extending this
 

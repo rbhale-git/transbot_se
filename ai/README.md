@@ -7,11 +7,13 @@ design notes and test logs: [docs/AI_NOTEBOOK.md](../docs/AI_NOTEBOOK.md).
 
 ```
 ai/
-  config.py         addresses, servo facts, tracker gains (mirrors dashboard config.js)
-  common/           shared infrastructure: video reader, rosbridge client, safety
-  face_tracking/    stage 1: face detection + gimbal tracking
-  models/           YuNet face detector ONNX (ships in-repo, ~230 KB)
-  tests/            pytest suite — run `python -m pytest ai/tests` from repo root
+  config.py           addresses, servo facts, behavior gains (mirrors dashboard config.js)
+  common/             shared infrastructure: video reader, rosbridge client, safety,
+                      detection type, rosbridge actuation check
+  face_tracking/      stage 1: face detection + gimbal tracking (YuNet)
+  person_following/   stage 2: person/dog following on the chassis (YOLO11n)
+  models/             ONNX models, in-repo: YuNet (~230 KB), YOLO11n (~10 MB)
+  tests/              pytest suite — run `python -m pytest` from repo root
 ```
 
 ## Setup
@@ -43,3 +45,37 @@ Preview keys: `q`/ESC quit, `c` re-center gimbal. Useful flags: `--kp`,
 `--deadband`, `--max-step`, `--rate`, `--pan-sign/--tilt-sign` (flip if the
 gimbal runs away from the face), `--record out.avi` (capture the stream for
 offline tuning), `--no-preview`.
+
+## Person following (stage 2)
+
+Drives the chassis: publishes `/ai/cmd_vel`, which the robot-side
+`cmd_vel_mux` forwards to `/cmd_vel` only while the dashboard's AI switch is
+ARMED and the joystick is quiet — clamped to the AI caps (0.25 m/s fwd,
+0.12 rev, 1.2 rad/s) no matter what this process sends. Locks the largest
+person (or `--target-class dog`) at arm time, follows by IoU association
+only, stops on loss. Engineering notes:
+[docs/PERSON_FOLLOWING_NOTEBOOK.md](../docs/PERSON_FOLLOWING_NOTEBOOK.md).
+
+```
+# offline, recorded clip
+python -m ai.person_following --source clip.avi --dry-run
+
+# robot camera, no commands
+python -m ai.person_following --dry-run
+
+# live: start it, then ARM AI on the dashboard. SPACE = stop + disarm.
+python -m ai.person_following
+
+# first runs in a new space: half caps
+python -m ai.person_following --cap-scale 0.5
+```
+
+Preview keys: `q`/ESC quit, `t` pause (publishes zeros). Useful flags:
+`--target-class`, `--cap-scale`, `--kp-ang`, `--kp-lin`, `--height-setpoint`
+(bigger = follows closer), `--smoothing`, `--record out.avi`. AI behaviors
+request a 480p server-side-downscaled stream by default (the Nano can't
+afford 720p per client — see the notebook's latency section); pass
+`--source` with the bare stream URL if you ever need full resolution.
+
+Detector throughput check: `python -m ai.person_following.benchmark`
+(design gate: 10+ fps; ~12 fps measured on the dev laptop at 640 px).

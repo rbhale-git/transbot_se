@@ -12,6 +12,17 @@
 
 ---
 
+## Execution status (updated 2026-06-11)
+
+- Tasks 1-9: DONE (commits ba01849..ef998bc, subagent-implemented, two-stage reviewed, final integration review GO).
+- Task 10 (offline validation): DONE — lock/stickiness/lost-stop verified on a recorded walk clip; caps and reverse limit confirmed in command stats.
+- Task 11 (deploy + mux verify): DONE — mux live on the robot, manual-through-mux drive, e-stop, arm semantics, and watchdog regression all pass.
+- Task 12 (live follow): DONE FOR INDOOR SCOPE — half caps, bedroom only. Live findings: angular sign +1 confirmed correct (first "turns away" was the latency limit cycle); kp_ang 0.6 + deadband_x 0.10 settle reliably; height_setpoint 0.8 ≈ 1 m follow distance; per-client 720p encoding saturates the Nano so both dashboard and AI now use downscaled streams (dashboard got STREAM on/off + SD/HD controls). Rosbridge half-registration bug bit twice more — it is PER TOPIC (a session can pass the gimbal actuation check while /ai/cmd_vel-/ai/enabled registrations are dead); verify mux armed flips + /ai/cmd_vel flows robot-side before trusting a session.
+- **Task 12b (PENDING): open-space validation.** Bedroom testing left untested: full caps (`--cap-scale 1.0`), sustained straight-line following at walking pace, wide turns, longer lost-reacquire distances, and the reverse time limit under a real walk-into-robot. Run the Task 12 checklist in a larger room / cleared garage / outdoors-flat before calling stage 2 operator-accepted.
+- Task 13 (docs): notebook + README written 2026-06-11; amend after Task 12b.
+
+---
+
 ## File structure
 
 | File | Action | Responsibility |

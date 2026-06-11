@@ -7,14 +7,19 @@ change it here too.
 from ai.face_tracking.tracker import AxisConfig
 
 # ---- Network profiles (same as dashboard PROFILES) -------------------------
+# AI streams are downscaled server-side (width/height/quality params): the
+# Nano re-encodes per client and full 720p saturates it — stream latency then
+# creeps up over a session (measured live 2026-06-11). Detectors letterbox to
+# 640 px anyway, so 480p costs nothing. Override with --source for full res.
+_DOWNSCALE = "&width=640&height=480&quality=50"
 PROFILES = {
     "home": {
         "rosbridge_url": "ws://192.168.0.109:9090",
-        "video_url": "http://192.168.0.109:8080/stream?topic=/usb_cam/image_raw&type=mjpeg",
+        "video_url": "http://192.168.0.109:8080/stream?topic=/usb_cam/image_raw&type=mjpeg" + _DOWNSCALE,
     },
     "hotspot": {
         "rosbridge_url": "ws://192.168.1.11:9090",
-        "video_url": "http://192.168.1.11:8080/stream?topic=/usb_cam/image_raw&type=mjpeg",
+        "video_url": "http://192.168.1.11:8080/stream?topic=/usb_cam/image_raw&type=mjpeg" + _DOWNSCALE,
     },
 }
 DEFAULT_PROFILE = "home"
@@ -27,8 +32,8 @@ DEFAULT_PROFILE = "home"
 # each move slightly undershoots and the next one finishes the job.
 GIMBAL_PAN = AxisConfig(servo_id=1, min_deg=0, max_deg=180, home_deg=90,
                         sign=-1, kp_deg=41.0)
-GIMBAL_TILT = AxisConfig(servo_id=2, min_deg=0, max_deg=180, home_deg=22,
-                         sign=-1, kp_deg=20.0)
+GIMBAL_TILT = AxisConfig(servo_id=2, min_deg=0, max_deg=115, home_deg=22,
+                         sign=-1, kp_deg=20.0)  # max upward tilt per operator: 115
 
 # ---- Tracker gains (retuned after first live run, 2026-06-10) ---------------
 # kp 8 / step 4 overshot live: stream latency kept commanding motion after the
@@ -74,7 +79,10 @@ FOLLOW = {
     "deadband_x": 0.10,         # |err_x| below this is "centered"
     "angular_sign": 1,          # flip to -1 if the robot turns AWAY (live check)
     # controller — linear: P on bbox-height fraction vs setpoint
-    "height_setpoint": 0.55,    # bbox h / frame h at the desired follow distance
+    # LIVE-TUNED 2026-06-11: operator wants ~1 m follow distance; 0.8 holds
+    # roughly that indoors (0.55 was ~1.5-2 m). Note the bbox clips at frame
+    # edges this close, so distance authority softens near the setpoint.
+    "height_setpoint": 0.8,     # bbox h / frame h at the desired follow distance
     "deadband_h": 0.05,
     "kp_lin": 1.2,              # m/s per unit height error
     "smoothing": 0.5,           # EMA weight on previous (cx, h) estimate

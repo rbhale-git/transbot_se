@@ -102,6 +102,19 @@ function getTopic(topicCfg) {
   return t;
 }
 
+/** Explicitly advertise a config-defined topic so its registration can be
+ *  verified — roslib otherwise advertises lazily on the first publish. */
+export function advertise(topicCfg) {
+  if (!isConnected()) return;
+  getTopic(topicCfg).advertise();
+}
+
+/** Drop the socket and let auto-reconnect build a FRESH session — the
+ *  workaround for the robot rosbridge's corrupt publisher registration. */
+export function kickConnection() {
+  if (ros) ros.close(); // close handler clears caches and schedules reconnect
+}
+
 /** Publish `msg` (plain object) to a config-defined topic. No-op offline. */
 export function publish(topicCfg, msg) {
   if (!isConnected()) return false;

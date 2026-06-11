@@ -87,6 +87,21 @@ export const SERVICES = {
   // Standard rosapi service (ships with rosbridge_server) — used to measure
   // round-trip latency over the WebSocket.
   getTime: { name: '/rosapi/get_time', type: 'rosapi/GetTime', verified: true },
+
+  // rosapi publisher introspection — the actuation self-check asks it whether
+  // rosbridge actually registered our command topics (see ACTUATION below).
+  publishers: { name: '/rosapi/publishers', type: 'rosapi/Publishers', verified: true },
+};
+
+// ---- Actuation self-check ---------------------------------------------------
+// The robot's rosbridge (0.11/Melodic) can half-fail a publisher registration
+// and silently drop every command on that topic while others keep working
+// (seen live 2026-06-11: gimbal fine, /manual/cmd_vel + /TargetAngle dead).
+// After each connect the dashboard advertises its command topics and verifies
+// the registration via rosapi; on failure it forces fresh sessions, then warns.
+export const ACTUATION = {
+  settleMs: 1200,       // advertise -> verify delay (registration races traffic)
+  maxFreshSessions: 2,  // forced reconnects before declaring a CMD FAULT
 };
 
 // ---- Motion limits ---------------------------------------------------------

@@ -95,6 +95,7 @@ function getTopic(topicCfg) {
       ros,
       name: topicCfg.name,
       messageType: topicCfg.type,
+      latch: topicCfg.latch === true,
     });
     topicCache.set(topicCfg.name, t);
   }

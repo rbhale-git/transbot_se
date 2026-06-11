@@ -57,8 +57,9 @@ export const TOPICS = {
   // Published once per captured frame by usb_cam — used as the FPS meter.
   cameraInfo: { name: '/usb_cam/camera_info', type: 'sensor_msgs/CameraInfo', verified: true },
 
-  // AI arbitration (stage 2). aiEnabled is latched robot-side by the mux.
-  aiEnabled: { name: '/ai/enabled', type: 'std_msgs/Bool', verified: true },
+  // AI arbitration (stage 2). aiEnabled is latched so late joiners (AI process,
+  // respawned mux) get the current state.
+  aiEnabled: { name: '/ai/enabled', type: 'std_msgs/Bool', latch: true, verified: true },
   muxStatus: { name: '/mux/status', type: 'std_msgs/String', verified: true },
   aiStatus: { name: '/ai/status', type: 'std_msgs/String', verified: true },
 };

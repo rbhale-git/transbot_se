@@ -88,8 +88,13 @@ class RosClient:
         self._status.publish(roslibpy.Message({"data": json.dumps(status_dict)}))
 
     def on_ai_enabled(self, callback):
-        """callback(bool) fires on every /ai/enabled message (latched, so the
-        current state arrives immediately after subscribing)."""
+        """callback(bool) fires on every /ai/enabled message.
+
+        The dashboard advertises this latched, so if it is already up the
+        current armed state arrives right after subscribing. If the AI
+        process starts first, nothing arrives until the operator touches
+        the ARM switch — RosSink therefore defaults to disarmed.
+        """
         self._enabled.subscribe(lambda msg: callback(bool(msg["data"])))
 
     def disconnect(self):

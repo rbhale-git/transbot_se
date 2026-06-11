@@ -1,5 +1,6 @@
 // ============================================================================
-// publishers/motion.js — the ONLY module that publishes /cmd_vel.
+// publishers/motion.js — the ONLY module that publishes TOPICS.cmdVel
+// (= /manual/cmd_vel; the robot-side mux forwards it to /cmd_vel).
 //
 // Exposes publishMotion(linear, angular) and stopMotion(). Any input source —
 // the keyboard handler today, an AI behavior node or external device tomorrow

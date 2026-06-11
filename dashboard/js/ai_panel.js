@@ -28,6 +28,7 @@ let armed = false;
 let lastMux = 0;
 let lastAi = 0;
 let runnerUp = false;
+let previewWanted = false; // applied at the next START (cv2 window on the laptop)
 
 function render() {
   const btn = $('ai-arm-btn');
@@ -48,15 +49,26 @@ function buildRunnerControls() {
   const btn = document.createElement('button');
   btn.id = 'ai-runner-btn';
   btn.className = 'panel-btn';
-  btn.title = 'start/stop the person-following process on the laptop '
-    + '(headless; this video pane is your eye). ARM is still a separate step.';
+  btn.title = 'start/stop the person-following process on the laptop. '
+    + 'ARM is still a separate step.';
   btn.innerHTML = '&#9655; START RUNNER';
   btn.disabled = true; // until the API answers a poll
+  const prevBtn = document.createElement('button');
+  prevBtn.id = 'ai-preview-btn';
+  prevBtn.className = 'panel-btn';
+  prevBtn.title = 'open the runner’s preview window (detection boxes, lock '
+    + 'state) at the next START. q in that window quits the runner.';
   const row = document.createElement('div');
   row.className = 'kv';
   row.innerHTML = '<span>RUNNER</span><code id="ai-runner-state" class="dim small">--</code>';
   panel.appendChild(btn);
+  panel.appendChild(prevBtn);
   panel.appendChild(row);
+  renderPreviewBtn();
+}
+
+function renderPreviewBtn() {
+  $('ai-preview-btn').textContent = previewWanted ? 'PREVIEW: ON' : 'PREVIEW: OFF';
 }
 
 function renderRunner(status) {
@@ -91,6 +103,10 @@ async function runnerRequest(path, body) {
 
 function initRunnerControls() {
   buildRunnerControls();
+  $('ai-preview-btn').addEventListener('click', () => {
+    previewWanted = !previewWanted;
+    renderPreviewBtn();
+  });
   $('ai-runner-btn').addEventListener('click', async () => {
     $('ai-runner-btn').disabled = true; // re-enabled by the next poll
     if (runnerUp) {
@@ -100,7 +116,7 @@ function initRunnerControls() {
       // switch first so the latched armed state can't move the robot the
       // moment the fresh runner connects.
       setArmed(false);
-      await runnerRequest('/start', {});
+      await runnerRequest('/start', { preview: previewWanted });
     }
     renderRunner(await runnerRequest(''));
   });

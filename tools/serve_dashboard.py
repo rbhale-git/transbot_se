@@ -65,11 +65,16 @@ class BehaviorRunner:
                 "last_exit": None if running else self._last_exit,
             }
 
-    def start(self, target_class=None, cap_scale=None):
+    def start(self, target_class=None, cap_scale=None, preview=False):
         with self._lock:
             if self._proc is not None and self._proc.poll() is None:
                 return False, "already running"
-            cmd = [sys.executable, "-u", "-m", "ai.person_following", "--no-preview"]
+            # The spawned process inherits this server's desktop session, so
+            # the cv2 preview window appears normally when requested (q in
+            # the preview quits the runner; the STOP button always works).
+            cmd = [sys.executable, "-u", "-m", "ai.person_following"]
+            if not preview:
+                cmd.append("--no-preview")
             if target_class is not None:
                 if not TARGET_CLASS_RE.match(target_class):
                     return False, "bad target_class"
@@ -150,7 +155,8 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
             return self._send_json({"error": "bad json"}, 400)
 
         if self.path == "/api/behavior/start":
-            ok, err = RUNNER.start(body.get("target_class"), body.get("cap_scale"))
+            ok, err = RUNNER.start(body.get("target_class"), body.get("cap_scale"),
+                                   preview=bool(body.get("preview")))
         elif self.path == "/api/behavior/stop":
             ok, err = RUNNER.stop()
         else:

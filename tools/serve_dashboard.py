@@ -13,6 +13,9 @@ time; output goes to runner.log in the repo root.
   GET  /api/behavior        -> {running, pid, args, started_s_ago, last_exit}
   POST /api/behavior/start  -> body {} or {"target_class": "dog", "cap_scale": 0.5}
   POST /api/behavior/stop
+  POST /api/heal            -> body {} or {"profile": "home"}; SSH-restarts
+                               rosbridge-dashboard.service on the robot and
+                               waits for it (409 while a behavior is running)
 
 Stopping is a hard terminate: the runner's parting-zero `finally` does not
 run, but the robot-side mux zeroes /cmd_vel on AI silence and the watchdog
@@ -34,6 +37,10 @@ PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROOT = os.path.join(REPO, "dashboard")
 RUNNER_LOG = os.path.join(REPO, "runner.log")
+
+sys.path.insert(0, REPO)
+from ai import config as ai_config  # noqa: E402
+from ai.common.heal import heal, host_from_url  # noqa: E402
 
 # Only values matching these ever reach the command line (list-form Popen,
 # no shell — this is belt and braces, not the only defense).
@@ -144,7 +151,7 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
         super().do_GET()
 
     def do_POST(self):
-        if not self.path.startswith("/api/behavior/"):
+        if not self.path.startswith("/api/"):
             return self._send_json({"error": "not found"}, 404)
         if not self._api_allowed():
             return self._send_json({"error": "localhost only"}, 403)
@@ -159,11 +166,32 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
                                    preview=bool(body.get("preview")))
         elif self.path == "/api/behavior/stop":
             ok, err = RUNNER.stop()
+        elif self.path == "/api/heal":
+            return self._heal(body)
         else:
             return self._send_json({"error": "not found"}, 404)
         if not ok:
             return self._send_json({"error": err}, 409)
         return self._send_json(RUNNER.status())
+
+    def _heal(self, body):
+        # A heal restarts the WHOLE robot stack; never yank it out from
+        # under a live behavior — the runner has its own preflight heal
+        # anyway. A START racing in during the ~30 s heal is accepted: the
+        # runner's own preflight ladder absorbs a mid-restart connect.
+        if RUNNER.status()["running"]:
+            return self._send_json({"error": "stop the runner first"}, 409)
+        profile = body.get("profile") or ai_config.DEFAULT_PROFILE
+        if profile not in ai_config.PROFILES:
+            return self._send_json({"error": "unknown profile"}, 400)
+        host = host_from_url(ai_config.PROFILES[profile]["rosbridge_url"])
+        print(f"heal requested: restarting the robot stack on {host} ...")
+        t0 = time.time()
+        ok, detail = heal(host)
+        print(f"heal {'succeeded' if ok else 'FAILED'}: {detail}")
+        return self._send_json(
+            {"ok": ok, "detail": detail, "seconds": int(time.time() - t0)},
+            200 if ok else 502)
 
 
 if __name__ == "__main__":

@@ -30,6 +30,7 @@ import cv2
 
 from ai import config
 from ai.common.connect import connect_with_actuation_check
+from ai.common.heal import heal, host_from_url
 from ai.common.safety import RateLimiter, ServoPacer
 from ai.common.video import VideoSource
 from ai.face_tracking.tracker import GimbalTracker
@@ -86,6 +87,9 @@ class RosSink:
 
     def send_status(self, status):
         self._client.send_status(status)
+
+    def publishers_of(self, topic, timeout_s=3.0):
+        return self._client.publishers_of(topic, timeout_s=timeout_s)
 
     def disconnect(self):
         self._client.disconnect()
@@ -193,7 +197,9 @@ def main(argv=None):
                 sink = DryRunSink()
             else:
                 sink = connect_with_actuation_check(
-                    lambda: RosSink(profile["rosbridge_url"]), src, config.GIMBAL_TILT)
+                    lambda: RosSink(profile["rosbridge_url"]), src,
+                    config.GIMBAL_TILT,
+                    heal=lambda: heal(host_from_url(profile["rosbridge_url"])))
 
             # Sync: drive the gimbal to the follow pose so tracker state
             # matches reality (the driver does not echo servo positions).

@@ -24,6 +24,8 @@ AI_STATUS_TOPIC = "/ai/status"
 AI_STATUS_TYPE = "std_msgs/String"
 AI_ENABLED_TOPIC = "/ai/enabled"
 AI_ENABLED_TYPE = "std_msgs/Bool"
+ROSAPI_PUBLISHERS_SERVICE = "/rosapi/publishers"
+ROSAPI_PUBLISHERS_TYPE = "rosapi/Publishers"
 
 # Pause between advertising and first publish. The robot's old rosbridge
 # (0.11/Melodic) can hit "Internal error processing topic" if its publisher
@@ -86,6 +88,17 @@ class RosClient:
 
     def send_status(self, status_dict):
         self._status.publish(roslibpy.Message({"data": json.dumps(status_dict)}))
+
+    def publishers_of(self, topic, timeout_s=3.0):
+        """Nodes registered as publishers of `topic`, straight from rosapi
+        (which runs inside the rosbridge process — the honest check for
+        the silent-drop registration bug). Raises on no answer; callers
+        treat that as 'unverifiable', never as a fault."""
+        service = roslibpy.Service(self._ros, ROSAPI_PUBLISHERS_SERVICE,
+                                   ROSAPI_PUBLISHERS_TYPE)
+        response = service.call(roslibpy.ServiceRequest({"topic": topic}),
+                                timeout=timeout_s)
+        return list(response["publishers"])
 
     def on_ai_enabled(self, callback):
         """callback(bool) fires on every /ai/enabled message.

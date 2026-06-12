@@ -23,6 +23,7 @@ import cv2
 
 from ai import config
 from ai.common.connect import connect_with_actuation_check
+from ai.common.heal import heal, host_from_url
 from ai.common.safety import RateLimiter
 from ai.common.video import VideoSource
 from ai.face_tracking.detector import YuNetDetector, select_primary
@@ -52,6 +53,9 @@ class RosSink:
 
     def send(self, servo_id, angle):
         self._client.send_pwm_servo(servo_id, angle)
+
+    def publishers_of(self, topic, timeout_s=3.0):
+        return self._client.publishers_of(topic, timeout_s=timeout_s)
 
     def disconnect(self):
         """Drop the session but keep the event loop usable for a retry."""
@@ -154,7 +158,8 @@ def main(argv=None):
                 sink = DryRunSink()
             else:
                 sink = connect_with_actuation_check(
-                    lambda: RosSink(profile["rosbridge_url"]), src, tilt_cfg)
+                    lambda: RosSink(profile["rosbridge_url"]), src, tilt_cfg,
+                    heal=lambda: heal(host_from_url(profile["rosbridge_url"])))
 
             # Sync: drive the gimbal to home so tracker state matches reality.
             for servo_id, angle in tracker.start_commands():

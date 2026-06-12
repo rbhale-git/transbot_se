@@ -110,6 +110,7 @@ function initActuationWarning() {
       $(panelId).classList.toggle('alert', fault && dead.includes(topic));
     }
     if (!fault) {
+      healSeq++; // invalidate any fault-era probe still in flight
       healBtn.classList.add('hidden');
       return;
     }

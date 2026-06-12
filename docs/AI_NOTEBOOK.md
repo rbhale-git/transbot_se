@@ -198,6 +198,11 @@ cases.
 
 ## Auto-heal for the rosbridge registration bug (2026-06-12)
 
+Full engineering notebook (bug history, design decisions, ladder
+internals, review findings, test + live-validation record):
+AUTOHEAL_NOTEBOOK.md (+ generated .docx). The summary below is the
+running-log entry.
+
 The per-topic silent-drop bug now cures itself. Three layers, one shared
 cure (`ai/common/heal.py`: SSH `sudo -n systemctl restart
 rosbridge-dashboard.service`, then wait for the rosbridge port; passwordless

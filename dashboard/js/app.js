@@ -102,18 +102,23 @@ function initActuationWarning() {
     try { return (await fetch('/api/behavior')).ok; } catch { return false; }
   }
 
+  let healSeq = 0; // invalidates a stale healApiUp() answer (fetches can reorder)
   onActuationCheck(async ({ state, dead = [] }) => {
     const fault = state === 'fault';
     chip.classList.toggle('hidden', !fault);
     for (const [topic, panelId] of Object.entries(panelFor)) {
       $(panelId).classList.toggle('alert', fault && dead.includes(topic));
     }
-    if (fault) {
-      chip.title = `rosbridge dropped publisher registration for ${dead.join(', ')}`
-        + ' — commands on these topics are being silently discarded.'
-        + ' Restart rosbridge-dashboard.service on the robot.';
+    if (!fault) {
+      healBtn.classList.add('hidden');
+      return;
     }
-    healBtn.classList.toggle('hidden', !(fault && await healApiUp()));
+    chip.title = `rosbridge dropped publisher registration for ${dead.join(', ')}`
+      + ' — commands on these topics are being silently discarded.'
+      + ' Restart rosbridge-dashboard.service on the robot.';
+    const seq = ++healSeq;
+    const up = await healApiUp();
+    if (seq === healSeq) healBtn.classList.toggle('hidden', !up);
   });
 
   healBtn.addEventListener('click', async () => {
@@ -123,6 +128,7 @@ function initActuationWarning() {
     try {
       const resp = await fetch('/api/heal', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ profile: $('profile-select').value }),
       });
       const out = await resp.json().catch(() => ({}));

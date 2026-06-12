@@ -2,8 +2,9 @@
 
 A laptop-based control and telemetry web dashboard for the Yahboom Transbot SE
 robot (Jetson Nano B01, ROS Melodic), plus a growing set of laptop-side AI
-behaviors (`ai/`) that drive the robot through the same interfaces — face
-tracking on the gimbal today, person following next.
+behaviors (`ai/`) that drive the robot through the same interfaces — a
+face-tracking gimbal and YOLO person following with gimbal-assisted tracking
+today; waypoint navigation and pick-and-place next.
 
 ## Architecture (v1)
 
@@ -108,6 +109,12 @@ sudo nmcli con up Transbot    # start the hotspot AP
       YOLO11n follower; notebook: `docs/PERSON_FOLLOWING_NOTEBOOK.md`).
       Remaining: open-space validation at full caps (see the plan's
       execution-status section)
+- [x] AI stage 2.5 — gimbal-assisted following: the gimbal tracks the locked
+      person's face/chest (fast, move-and-settle) while the chassis steers on
+      the fused bearing (image error + pan offset) and drive speed is
+      cos(bearing)-scaled. `--fixed-gimbal` restores the parked-gimbal mode
+      for A/B comparison. Spec + plan in `docs/superpowers/`. Remaining:
+      armed walking validation
 
 ## Quick start (real robot)
 
@@ -163,7 +170,8 @@ all stay in sync.
 
 | Button | Pose | Behavior |
 | --- | --- | --- |
-| GIMBAL HOME | pan 90°, tilt 22° | same path as the C key |
+| CAMERA DRIVE | pan 90°, tilt 22° | driving pose, same path as the C key |
+| CAMERA AP | pan 90°, tilt 45° | looking-up pose (tilt ceiling is 115°) |
 | ARM HOME | J7 225°, J8 30°, J9 30° | all joints, including gripper |
 | ARM READY | J7 110°, J8 175°, J9 30° | staged: J8 leads, J7+J9 start after ~5° of J8 travel |
 | ARM STOW | J7 225°, J8 30° | gripper (J9) stays where it is — holds its grip |
@@ -190,6 +198,19 @@ lights when a controller is detected (press any button to wake it).
 
 ### Other dashboard tools
 
+- **AI panel** — arm/disarm switch for autonomous chassis motion (the
+  robot-side mux enforces it), live `/mux/status` + `/ai/status` readouts,
+  and START/STOP RUNNER + PREVIEW ON/OFF buttons that launch the
+  person-following process via a localhost-only API in
+  `tools/serve_dashboard.py` (one behavior at a time; logs to `runner.log`).
+- **Camera controls** — STREAM on/off and SD/HD preset on the video pane;
+  each MJPEG client costs the Nano CPU, so switch to SD (or off) while an AI
+  behavior is consuming the stream.
+- **Actuation self-check** — after every connect the dashboard verifies via
+  rosapi that rosbridge really registered its command topics (the Melodic
+  rosbridge can half-fail a registration and silently drop one topic's
+  commands while others work). On failure it forces fresh sessions, then
+  shows a red CMD FAULT chip and flags the affected panel.
 - **SETTINGS panel** — live-tune the speed caps (never above the hard driver
   limits), gimbal/arm step sizes, and arm `run_time`. Persisted across
   reloads in localStorage.
@@ -280,6 +301,7 @@ python -m ai.face_tracking        # stage 1: face-tracking gimbal (q quit, c hom
 python -m ai.face_tracking.calibrate   # re-measure loop latency + per-axis gains
 python -m ai.person_following     # stage 2: follow a person (ARM on the dashboard first)
 python -m ai.person_following --target-class dog --cap-scale 0.5
+python -m ai.person_following --fixed-gimbal   # park the gimbal (pre-2.5 A/B mode)
 python -m pytest ai/tests
 ```
 
@@ -290,19 +312,33 @@ joystick is quiet, clamped to AI caps (0.25 m/s fwd / 0.12 rev / 1.2 rad/s);
 any joystick input takes over instantly; SPACE e-stops AND disarms; the
 `cmd_vel` watchdog remains the last line of defense underneath it all.
 
+While following, the gimbal is a fast inner loop: it tracks the locked
+person's face/chest (aim point 20% from the bbox top — a close person's bbox
+center never leaves the tilt deadband) and the chassis steers on the total
+bearing, image error + gimbal pan offset, which is invariant to gimbal moves
+so the two loops can't fight. The gimbal tracks whether or not the AI is
+armed — arming gates chassis motion only. Servo commands are paced ≥150 ms
+apart across the whole process (`ServoPacer`): the vendor driver drops
+back-to-back commands, and a silently dropped command would desync the pan
+estimate the chassis steers by.
+
 Layout: `ai/common/` (MJPEG client, rosbridge client, safety primitives —
 shared by every behavior), `ai/face_tracking/` (YuNet detector +
-move-and-settle gimbal tracker), `ai/config.py` (mirrors the verified values
-in `dashboard/js/config.js`), `ai/models/` (ONNX models).
+move-and-settle gimbal tracker, reused by stage 2), `ai/person_following/`
+(YOLO11n detector, lock-at-arm IoU tracker, bearing-fusion follow
+controller), `ai/config.py` (mirrors the verified values in
+`dashboard/js/config.js`), `ai/models/` (ONNX models).
 
 Engineering notes live in `docs/` notebook-style: `docs/AI_NOTEBOOK.md`
-(connection recipes, rosbridge failure modes and mitigations) and
+(connection recipes, rosbridge failure modes and mitigations),
 `docs/GIMBAL_TRACKING_NOTEBOOK.md` (why move-and-settle beats continuous
 control over a ~0.8 s blind video loop, measured constants, calibration
-method).
+method) and `docs/PERSON_FOLLOWING_NOTEBOOK.md` (stage 2 build + live
+validation record).
 
 **Staged roadmap:** ① face-tracking gimbal — done; ② person following —
-done (indoor validation; open-space run pending); ③ ArUco waypoint
+done (indoor validation; open-space run pending); ②.5 gimbal-assisted
+following — built, armed walking validation pending; ③ ArUco waypoint
 navigation; ④ autonomous pick-and-place built on the READY/STOW pose
 primitives.
 

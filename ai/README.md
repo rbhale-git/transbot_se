@@ -56,6 +56,14 @@ person (or `--target-class dog`) at arm time, follows by IoU association
 only, stops on loss. Engineering notes:
 [docs/PERSON_FOLLOWING_NOTEBOOK.md](../docs/PERSON_FOLLOWING_NOTEBOOK.md).
 
+The gimbal tracks the locked person too (armed or not — arming gates chassis
+motion only): it aims at the face/chest (20% from the bbox top) with the
+stage-1 move-and-settle tracker, and the chassis steers on the total bearing
+(image error + pan offset), so lock survives lateral motion that the
+chassis alone is too slow to catch. `--fixed-gimbal` parks the gimbal for
+A/B comparison with the stage-2 behavior. Design:
+`docs/superpowers/specs/2026-06-11-gimbal-assisted-following-design.md`.
+
 ```
 # offline, recorded clip
 python -m ai.person_following --source clip.avi --dry-run
@@ -70,9 +78,10 @@ python -m ai.person_following
 python -m ai.person_following --cap-scale 0.5
 ```
 
-Preview keys: `q`/ESC quit, `t` pause (publishes zeros). Useful flags:
-`--target-class`, `--cap-scale`, `--kp-ang`, `--kp-lin`, `--height-setpoint`
-(bigger = follows closer), `--smoothing`, `--record out.avi`. AI behaviors
+Preview keys: `q`/ESC quit, `t` pause (publishes zeros, freezes the gimbal).
+Useful flags: `--target-class`, `--cap-scale`, `--kp-ang`, `--kp-lin`,
+`--height-setpoint` (bigger = follows closer), `--smoothing`,
+`--fixed-gimbal`, `--record out.avi`. AI behaviors
 request a 480p server-side-downscaled stream by default (the Nano can't
 afford 720p per client — see the notebook's latency section); pass
 `--source` with the bare stream URL if you ever need full resolution.

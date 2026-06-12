@@ -234,3 +234,32 @@ distance reads closer on a dog — live dog tuning is its own session. The
 runner matches the class label literally; a typo'd config value would start
 cleanly and simply never lock (the picker constrains values, so only a bad
 `config.js` edit can hit this).
+
+### Live validation (2026-06-12, robot ~4 min after boot)
+
+All automatable checklist items PASSED against the live robot:
+
+- CLI heal with the stack healthy: `python tools/heal_rosbridge.py` →
+  "restarted; rosbridge port is back"; camera + rosbridge ports back ~4 s
+  after the port probe resumed; service active.
+- Runner preflight (person): registration check silent-pass, wiggle passed,
+  "actuation check passed (attempt 1)", runner stable.
+- THE LADDER FIRED FOR REAL on the dog-mode start: attempt 1's wiggle
+  failed ("commands are not reaching the gimbal" — the known dropped-session
+  behavior; registration had passed), the ladder forced a fresh session and
+  passed on attempt 2. Zero operator intervention — exactly the failure the
+  feature was built for, cured by the first escalation rung.
+- Dog mode: `/ai/status` verified ARRIVING ROBOT-SIDE via a second rosbridge
+  subscription — `{"state": "SEARCHING", "target_class": "dog", "fps": ~8-10}`.
+- API heal (the button's backend): 409 "stop the runner first" while the
+  runner was up; after stop, `POST /api/heal` → `{ok: true, seconds: 38}`,
+  stack healthy after. Still pending: the literal browser button click,
+  which needs a natural CMD FAULT while the dashboard is open.
+
+OPERATIONAL GOTCHA found during validation: a STALE `serve_dashboard.py`
+left running across a code upgrade keeps serving the OLD module, and on
+Windows a second instance binds the same port anyway (SO_REUSEADDR), so
+requests split between old and new code — symptom: new endpoints 404
+"randomly" while everything else works. After pulling new dashboard-server
+code, kill every old `serve_dashboard.py` (check `Get-Process python` /
+port 8000's owner) before starting the new one.

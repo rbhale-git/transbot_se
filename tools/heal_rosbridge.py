@@ -24,7 +24,8 @@ from ai.common.heal import heal, host_from_url  # noqa: E402
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(description=__doc__)
+    p = argparse.ArgumentParser(description=__doc__,
+                                formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--profile", choices=sorted(config.PROFILES),
                    default=config.DEFAULT_PROFILE)
     args = p.parse_args(argv)

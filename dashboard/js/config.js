@@ -104,6 +104,14 @@ export const ACTUATION = {
   maxFreshSessions: 2,  // forced reconnects before declaring a CMD FAULT
 };
 
+// ---- AI behaviors -----------------------------------------------------------
+// COCO classes offered by the AI panel's target picker. Values must satisfy
+// serve_dashboard.py's TARGET_CLASS_RE (lowercase letters/spaces only).
+// Applies at the next runner START, like the preview toggle.
+export const AI = {
+  targetClasses: ['person', 'dog', 'cat'],
+};
+
 // ---- Motion limits ---------------------------------------------------------
 // hardMax = absolute driver limits from the brief; never exceeded, ever.
 // cap     = conservative v1 operating limit (brief: start well below max).

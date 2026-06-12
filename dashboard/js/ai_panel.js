@@ -15,7 +15,7 @@
 // build their own DOM here so the whole runner feature lives in one module.
 // ============================================================================
 
-import { TOPICS, TELEMETRY } from './config.js';
+import { TOPICS, TELEMETRY, AI } from './config.js';
 import { publish, subscribe, onStatus } from './ros.js';
 import { onEStop } from './keyboard.js';
 
@@ -61,8 +61,25 @@ function buildRunnerControls() {
   const row = document.createElement('div');
   row.className = 'kv';
   row.innerHTML = '<span>RUNNER</span><code id="ai-runner-state" class="dim small">--</code>';
+  const classRow = document.createElement('div');
+  classRow.className = 'kv';
+  const classLabel = document.createElement('span');
+  classLabel.textContent = 'TARGET';
+  const classSel = document.createElement('select');
+  classSel.id = 'ai-class-select';
+  classSel.title = 'COCO class the runner follows — applies at the next START';
+  for (const c of AI.targetClasses) {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c.toUpperCase();
+    classSel.appendChild(opt);
+  }
+  classSel.addEventListener('change', () => classSel.blur()); // keep driving keys free
+  classRow.appendChild(classLabel);
+  classRow.appendChild(classSel);
   panel.appendChild(btn);
   panel.appendChild(prevBtn);
+  panel.appendChild(classRow);
   panel.appendChild(row);
   renderPreviewBtn();
 }
@@ -116,7 +133,10 @@ function initRunnerControls() {
       // switch first so the latched armed state can't move the robot the
       // moment the fresh runner connects.
       setArmed(false);
-      await runnerRequest('/start', { preview: previewWanted });
+      await runnerRequest('/start', {
+        preview: previewWanted,
+        target_class: $('ai-class-select').value,
+      });
     }
     renderRunner(await runnerRequest(''));
   });

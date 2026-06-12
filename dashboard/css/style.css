@@ -270,6 +270,16 @@ h1 i {
 .warning-btn:disabled { opacity: 0.6; cursor: wait; }
 .status-card .warning-btn { margin-top: 6px; }
 
+/* AI panel target-class picker */
+#ai-class-select {
+  background: var(--c-card2);
+  color: var(--c-ink-bright);
+  border: 1px solid var(--c-line2);
+  border-radius: 8px;
+  font-size: 11px;
+  padding: 2px 6px;
+}
+
 /* battery card */
 .pw-volt { display: flex; align-items: baseline; gap: 4px; margin-top: 6px; }
 .pw-volt b {

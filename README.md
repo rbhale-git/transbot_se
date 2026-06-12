@@ -200,9 +200,11 @@ lights when a controller is detected (press any button to wake it).
 
 - **AI panel** — arm/disarm switch for autonomous chassis motion (the
   robot-side mux enforces it), live `/mux/status` + `/ai/status` readouts,
-  and START/STOP RUNNER + PREVIEW ON/OFF buttons that launch the
+  START/STOP RUNNER + PREVIEW ON/OFF buttons that launch the
   person-following process via a localhost-only API in
-  `tools/serve_dashboard.py` (one behavior at a time; logs to `runner.log`).
+  `tools/serve_dashboard.py` (one behavior at a time; logs to `runner.log`),
+  and a **TARGET picker** (person / dog / cat; passed as `--target-class` at
+  the next START — values come from `config.js` `AI.targetClasses`).
 - **Camera controls** — STREAM on/off and SD/HD preset on the video pane;
   each MJPEG client costs the Nano CPU, so switch to SD (or off) while an AI
   behavior is consuming the stream.
@@ -211,6 +213,15 @@ lights when a controller is detected (press any button to wake it).
   rosbridge can half-fail a registration and silently drop one topic's
   commands while others work). On failure it forces fresh sessions, then
   shows a red CMD FAULT chip and flags the affected panel.
+- **Auto-heal (rosbridge restart)** — CMD FAULT now carries a RESTART
+  ROSBRIDGE button (visible only when served by `tools/serve_dashboard.py`,
+  which can SSH; a bare browser cannot). `POST /api/heal` refuses while a
+  behavior is running (409) and a server-side lock prevents concurrent
+  restarts. The runner preflight (`ai/common/connect.py`) can also trigger
+  one heal per run autonomously — rosapi registration check then tilt-wiggle,
+  escalating through fresh sessions before healing, then aborting and naming
+  the dead topics if the final session still fails. CLI: `python
+  tools/heal_rosbridge.py [--profile hotspot]`.
 - **SETTINGS panel** — live-tune the speed caps (never above the hard driver
   limits), gimbal/arm step sizes, and arm `run_time`. Persisted across
   reloads in localStorage.

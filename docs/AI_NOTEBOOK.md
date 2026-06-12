@@ -195,3 +195,42 @@ prerequisites: a command-priority mux node (e-stop > manual > AI, with a
 lower AI speed cap) and a dashboard AI arm/disarm panel. The robot-side
 cmd_vel watchdog (bring-up phase 5) already covers AI-crash and link-loss
 cases.
+
+## Auto-heal for the rosbridge registration bug (2026-06-12)
+
+The per-topic silent-drop bug now cures itself. Three layers, one shared
+cure (`ai/common/heal.py`: SSH `sudo -n systemctl restart
+rosbridge-dashboard.service`, then wait for the rosbridge port; passwordless
+key + sudo already provisioned):
+
+- Runner preflight (`ai/common/connect.py`): every fresh session is checked
+  in two phases — rosapi publisher registration for /PWMServo, /ai/cmd_vel
+  and /ai/status (the check that would have caught both 2026-06-11
+  incidents), then the tilt-wiggle end-to-end proof. Escalation: 2 extra
+  fresh sessions, then ONE heal per run, then one final session, then
+  abort naming the dead topics. rosapi silent (mock server) = unverified,
+  the wiggle decides alone. The heal restarts the whole robot stack, so
+  the video source is reopened afterwards (`VideoSource.reopen()` retries
+  up to 60 s while the camera comes back).
+- Dashboard: CMD FAULT now carries a RESTART ROSBRIDGE button (only when
+  served by `tools/serve_dashboard.py` — a browser cannot SSH). POST
+  /api/heal refuses (409) while a behavior process is running, and a
+  server-side lock stops concurrent heals from stacking restarts.
+- By hand: `python tools/heal_rosbridge.py [--profile hotspot]`. Also
+  clears the wedged /voltage publisher seen after power cycles.
+
+Blast radius of any heal: camera + all connections drop ~15-30 s (the
+service runs bringup + usb_cam + web_video_server + rosbridge). All paths
+fire only with the robot stationary: the preflight runs before arming is
+possible, the button is operator-clicked and refused while a runner is up.
+
+Known limitation: a robot that is unreachable at process start still fails
+fast — the heal fires only when a session CONNECTS but its checks fail.
+
+Also new: the AI panel has a TARGET picker (person/dog/cat, `config.js`
+`AI.targetClasses`), passed as `--target-class` at the next START. Dog-mode
+caveat: `height_setpoint` 0.8 was tuned on a standing person, so the follow
+distance reads closer on a dog — live dog tuning is its own session. The
+runner matches the class label literally; a typo'd config value would start
+cleanly and simply never lock (the picker constrains values, so only a bad
+`config.js` edit can hit this).

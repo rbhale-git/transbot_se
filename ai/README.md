@@ -86,5 +86,25 @@ request a 480p server-side-downscaled stream by default (the Nano can't
 afford 720p per client — see the notebook's latency section); pass
 `--source` with the bare stream URL if you ever need full resolution.
 
+`--target-class` accepts any YOLO class label (`person`, `dog`, `cat`, …);
+the dashboard AI panel TARGET picker constrains valid values and passes it at
+START. Dog/cat caveat: `--height-setpoint` 0.8 was tuned on a standing person,
+so follow distance reads closer on a shorter target — retune live.
+
 Detector throughput check: `python -m ai.person_following.benchmark`
 (design gate: 10+ fps; ~12 fps measured on the dev laptop at 640 px).
+
+## Rosbridge auto-heal
+
+The runner preflight (`ai/common/connect.py`) checks rosapi publisher
+registration for `/PWMServo`, `/ai/cmd_vel`, and `/ai/status`, then proves
+actuation with a tilt wiggle. Escalation ladder: 2 extra fresh sessions →
+ONE `heal` per run (SSH restart of `rosbridge-dashboard.service`) → one
+final session → abort naming dead topics. After a heal, `VideoSource.reopen()`
+waits up to 60 s for the camera to come back.
+
+CLI heal (no runner needed): `python tools/heal_rosbridge.py [--profile hotspot]`.
+Also clears the wedged `/voltage` publisher seen after power cycles.
+
+Known limitation: a robot that is unreachable at process start still fails
+fast — the heal fires only when a session connects but its checks fail.

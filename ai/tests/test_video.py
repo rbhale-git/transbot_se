@@ -61,6 +61,22 @@ class TestVideoSource:
         assert len(levels) == 10
         assert all(abs(got - n * 20) <= 3 for n, got in enumerate(levels))
 
+    def test_reopen_reads_frames_again(self, tiny_video):
+        # A heal restarts the robot stack and kills the MJPEG stream;
+        # reopen() must bring a closed/dead source back to life.
+        with VideoSource(tiny_video) as src:
+            assert src.read(timeout_s=2.0) is not None
+            src.reopen(timeout_s=5.0)
+            assert src.alive
+            assert src.read(timeout_s=2.0) is not None
+
+    def test_reopen_raises_when_source_stays_gone(self, tiny_video, tmp_path):
+        src = VideoSource(tiny_video)
+        src.close()
+        src._source = str(tmp_path / "missing.avi")
+        with pytest.raises(RuntimeError):
+            src.reopen(timeout_s=0.2, sleep=lambda s: None)
+
 
 class TestFramesDiffer:
     """Actuation self-test primitive: did the camera view actually change

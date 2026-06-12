@@ -36,14 +36,20 @@ class VideoSource:
     """
 
     def __init__(self, source, pace_s=None):
-        self._cap = cv2.VideoCapture(source)
+        self._source = source
         self._pace_s = pace_s
-        if not self._cap.isOpened():
-            raise RuntimeError(f"could not open video source: {source!r}")
         self._lock = threading.Condition()
-        self._frame = None
-        self._seq = 0
-        self._alive = True
+        self._open()
+
+    def _open(self):
+        self._cap = cv2.VideoCapture(self._source)
+        if not self._cap.isOpened():
+            raise RuntimeError(f"could not open video source: {self._source!r}")
+        with self._lock:
+            self._frame = None
+            self._seq = 0
+            self._returned_seq = 0
+            self._alive = True
         self._thread = threading.Thread(target=self._pump, daemon=True)
         self._thread.start()
 
@@ -83,6 +89,26 @@ class VideoSource:
     def close(self):
         self._alive = False
         self._thread.join(timeout=2.0)
+
+    def reopen(self, timeout_s=60.0, sleep=time.sleep, clock=time.monotonic):
+        """Re-create the capture after the robot stack restarted.
+
+        A rosbridge heal (ai/common/heal.py) takes web_video_server down
+        with it; the camera comes back ~15-30 s later, so retry until the
+        source opens or the timeout expires.
+        """
+        self.close()
+        deadline = clock() + timeout_s
+        while True:
+            try:
+                self._open()
+                return
+            except RuntimeError:
+                if clock() >= deadline:
+                    raise RuntimeError(
+                        f"video source did not come back within "
+                        f"{timeout_s:.0f}s: {self._source!r}")
+                sleep(2.0)
 
     def __enter__(self):
         return self

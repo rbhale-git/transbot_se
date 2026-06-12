@@ -99,7 +99,8 @@ def connect_with_actuation_check(sink_factory, src, tilt_cfg, attempts=3,
             print("rosbridge is back - reopening the video stream ...")
             src.reopen()
             budget += 1  # one post-heal session
-        sleep(2.0)
+        if attempt < budget:
+            sleep(2.0)
     raise RuntimeError(
         f"actuation check failed after {attempt} rosbridge sessions"
         + (" including a service restart" if healed else "")

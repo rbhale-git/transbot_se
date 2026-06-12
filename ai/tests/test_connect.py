@@ -140,3 +140,25 @@ class TestLadder:
             connect_with_actuation_check(
                 factory_of(*sinks), FakeSrc(), TILT, attempts=3,
                 heal=FakeHeal(ok=False), sleep=NOSLEEP)
+
+    def test_post_heal_wiggle_failure_reports_last_symptom(self):
+        # Registration heals, but the wiggle then fails: the abort must
+        # report the LAST symptom plus the fact a restart was already tried.
+        bad = [FakeSink(DEAD_CMD_VEL) for _ in range(3)]
+        good_reg = FakeSink(ALL_OK)
+        heal = FakeHeal()
+        src = FakeSrc(moving=False)  # wiggle never passes
+        with pytest.raises(RuntimeError) as err:
+            connect_with_actuation_check(
+                factory_of(*bad, good_reg), src, TILT, attempts=3,
+                heal=heal, sleep=NOSLEEP)
+        assert "tilt wiggle" in str(err.value)
+        assert "service restart" in str(err.value)
+        assert heal.calls == 1
+
+    def test_silent_rosapi_with_dead_wiggle_still_aborts(self):
+        sinks = [FakeSink(None) for _ in range(3)]
+        with pytest.raises(RuntimeError, match="tilt wiggle"):
+            connect_with_actuation_check(
+                factory_of(*sinks), FakeSrc(moving=False), TILT, attempts=3,
+                sleep=NOSLEEP)

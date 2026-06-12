@@ -7,7 +7,7 @@ import {
   PROFILES, DEFAULT_PROFILE, MOTION, POWER, TELEMETRY, KEYS, GIMBAL, ARM,
   VIDEO, TOPICS, stepSign,
 } from './config.js';
-import { connect, onStatus } from './ros.js';
+import { connect, onStatus, kickConnection } from './ros.js';
 import { initActuationCheck, onActuationCheck } from './actuation_check.js';
 import { onMotionCommand } from './publishers/motion.js';
 import {
@@ -87,12 +87,22 @@ function initStatusLamp() {
 
 function initActuationWarning() {
   const chip = $('actuation-warning');
+  const healBtn = $('actuation-heal-btn');
   const panelFor = {
     [TOPICS.cmdVel.name]: 'drive-panel',
     [TOPICS.pwmServo.name]: 'gimbal-panel',
     [TOPICS.targetAngle.name]: 'arm-panel',
   };
-  onActuationCheck(({ state, dead = [] }) => {
+
+  // The heal needs serve_dashboard.py (a browser can't SSH); when the
+  // behavior API isn't there the chip's manual instructions still stand.
+  // Probed per fault (not via the AI panel's poll) — a fault can fire
+  // before that panel's first poll lands.
+  async function healApiUp() {
+    try { return (await fetch('/api/behavior')).ok; } catch { return false; }
+  }
+
+  onActuationCheck(async ({ state, dead = [] }) => {
     const fault = state === 'fault';
     chip.classList.toggle('hidden', !fault);
     for (const [topic, panelId] of Object.entries(panelFor)) {
@@ -103,6 +113,33 @@ function initActuationWarning() {
         + ' — commands on these topics are being silently discarded.'
         + ' Restart rosbridge-dashboard.service on the robot.';
     }
+    healBtn.classList.toggle('hidden', !(fault && await healApiUp()));
+  });
+
+  healBtn.addEventListener('click', async () => {
+    healBtn.disabled = true;
+    healBtn.textContent = 'RESTARTING…';
+    let fail = null;
+    try {
+      const resp = await fetch('/api/heal', {
+        method: 'POST',
+        body: JSON.stringify({ profile: $('profile-select').value }),
+      });
+      const out = await resp.json().catch(() => ({}));
+      if (resp.ok) kickConnection(); // reconnect re-runs the self-check
+      else fail = out.error ?? out.detail ?? `heal failed (${resp.status})`;
+    } catch {
+      fail = 'behavior API unreachable';
+    }
+    if (fail) {
+      healBtn.textContent = 'HEAL FAILED';
+      healBtn.title = fail;
+      setTimeout(() => { healBtn.textContent = 'RESTART ROSBRIDGE'; }, 4000);
+    } else {
+      healBtn.textContent = 'RESTART ROSBRIDGE';
+    }
+    healBtn.disabled = false;
+    healBtn.blur(); // keep focus free for driving keys
   });
 }
 

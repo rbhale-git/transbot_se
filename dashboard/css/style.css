@@ -255,6 +255,21 @@ h1 i {
 }
 .status-card .warning { margin-top: 6px; }
 
+/* one-click cure for CMD FAULT — only shown when serve_dashboard.py hosts us */
+.warning-btn {
+  border-radius: 99px;
+  border: 1px solid color-mix(in srgb, var(--c-danger) 35%, transparent);
+  background: color-mix(in srgb, var(--c-danger) 12%, transparent);
+  color: var(--c-danger-bright);
+  font-family: var(--display);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.warning-btn:disabled { opacity: 0.6; cursor: wait; }
+.status-card .warning-btn { margin-top: 6px; }
+
 /* battery card */
 .pw-volt { display: flex; align-items: baseline; gap: 4px; margin-top: 6px; }
 .pw-volt b {

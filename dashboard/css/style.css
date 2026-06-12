@@ -278,7 +278,9 @@ h1 i {
   border-radius: 8px;
   font-size: 11px;
   padding: 2px 6px;
+  font-family: var(--mono);
 }
+#ai-class-select option { background: var(--c-card2); color: var(--c-ink); }
 
 /* battery card */
 .pw-volt { display: flex; align-items: baseline; gap: 4px; margin-top: 6px; }

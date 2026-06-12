@@ -35,6 +35,8 @@ from ai.common.video import frames_differ
 # constants in ai/common/ros_client.py — NOT imported from there, because
 # behaviors import this module on dry runs where roslibpy may be absent
 # (RosClient is deliberately imported lazily inside the sinks).
+# RosClient advertises all three for every behavior (ros_client.py _pubs),
+# so checking all three is truthful even for gimbal-only face tracking.
 REGISTRATION_TOPICS = ("/PWMServo", "/ai/cmd_vel", "/ai/status")
 ROSBRIDGE_NODE = "/rosbridge_websocket"
 

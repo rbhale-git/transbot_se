@@ -54,8 +54,12 @@ class VideoSource:
         self._thread.start()
 
     def _pump(self):
+        # Bind the capture locally: if close()'s join times out (a hung
+        # stream read during reopen), the stale thread must keep using and
+        # releasing ITS capture, never the one a later _open() installed.
+        cap = self._cap
         while self._alive:
-            ok, frame = self._cap.read()
+            ok, frame = cap.read()
             with self._lock:
                 if not ok:
                     self._alive = False
@@ -65,7 +69,7 @@ class VideoSource:
                 self._lock.notify_all()
             if ok and self._pace_s:
                 time.sleep(self._pace_s)
-        self._cap.release()
+        cap.release()
 
     @property
     def alive(self):

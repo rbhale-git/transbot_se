@@ -120,6 +120,10 @@ class BehaviorRunner:
 
 RUNNER = BehaviorRunner()
 
+# One robot restart at a time — a second heal click (or stray client) must
+# not stack systemctl restarts while one is already in flight.
+HEAL_LOCK = threading.Lock()
+
 
 class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -181,17 +185,22 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
         # runner's own preflight ladder absorbs a mid-restart connect.
         if RUNNER.status()["running"]:
             return self._send_json({"error": "stop the runner first"}, 409)
-        profile = body.get("profile") or ai_config.DEFAULT_PROFILE
-        if profile not in ai_config.PROFILES:
-            return self._send_json({"error": "unknown profile"}, 400)
-        host = host_from_url(ai_config.PROFILES[profile]["rosbridge_url"])
-        print(f"heal requested: restarting the robot stack on {host} ...")
-        t0 = time.time()
-        ok, detail = heal(host)
-        print(f"heal {'succeeded' if ok else 'FAILED'}: {detail}")
-        return self._send_json(
-            {"ok": ok, "detail": detail, "seconds": int(time.time() - t0)},
-            200 if ok else 502)
+        if not HEAL_LOCK.acquire(blocking=False):
+            return self._send_json({"error": "heal already in progress"}, 409)
+        try:
+            profile = body.get("profile") or ai_config.DEFAULT_PROFILE
+            if profile not in ai_config.PROFILES:
+                return self._send_json({"error": "unknown profile"}, 400)
+            host = host_from_url(ai_config.PROFILES[profile]["rosbridge_url"])
+            print(f"heal requested: restarting the robot stack on {host} ...")
+            t0 = time.time()
+            ok, detail = heal(host)
+            print(f"heal {'succeeded' if ok else 'FAILED'}: {detail}")
+            return self._send_json(
+                {"ok": ok, "detail": detail, "seconds": int(time.time() - t0)},
+                200 if ok else 502)
+        finally:
+            HEAL_LOCK.release()
 
 
 if __name__ == "__main__":
